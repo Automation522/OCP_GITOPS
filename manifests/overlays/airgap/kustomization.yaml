@@ -5,13 +5,13 @@ resources:
   - ../../base
 images:
   - name: quay.io/example/ocp-gitops-demo-app
-    newName: registry.airgap.local/gitops/customer-web
+    newName: harbor.skyr.dca.scc/gitops/customer-web
     newTag: 0.1.0
   - name: quay.io/example/ocp-gitops-demo-db-init
-    newName: registry.airgap.local/gitops/customer-db-init
+    newName: harbor.skyr.dca.scc/gitops/customer-db-init
     newTag: 0.1.0
   - name: registry.redhat.io/rhel9/postgresql-15
-    newName: registry.airgap.local/rhel9/postgresql-15
+    newName: harbor.skyr.dca.scc/rhel9/postgresql-15
     newTag: 1-80
 patches:
   - target:

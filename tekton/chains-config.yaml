@@ -9,6 +9,6 @@ metadata:
 data:
   artifacts.taskrun.format: tekton
   artifacts.taskrun.storage: oci
-  artifacts.oci.repository: registry.airgap.local/gitops/signatures
+  artifacts.oci.repository: harbor.skyr.dca.scc/gitops/signatures
   artifacts.oci.signer: cosign
   transparency.enabled: "false"

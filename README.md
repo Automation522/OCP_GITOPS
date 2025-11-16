@@ -26,12 +26,12 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 | Application | Node.js/Express (3 pods) + PostgreSQL 15 (StatefulSet 1 réplique, PVC RWX ceph-fs) |
 | Déploiement | Kustomize (`manifests/base` + overlay `manifests/overlays/airgap`) suivi par Argo CD |
 | CI/CD | Pipeline Tekton (tests → build/push → signature cosign → sync Argo) + Tekton Chains |
-| Air-gap | Images mirroirées dans `registry.airgap.local`, secrets registry + cosign en namespace `gitops-demo` |
+| Air-gap | Images mirroirées dans `harbor.skyr.dca.scc`, secrets registry + cosign en namespace `gitops-demo` |
 
 ## Prérequis
 
 - Cluster OpenShift 4.18 avec OpenShift GitOps (Argo CD) et OpenShift Pipelines (Tekton)
-- Accès au registre miroir `registry.airgap.local` (secret `registry-credentials`)
+- Accès au registre miroir `harbor.skyr.dca.scc` (secret `registry-credentials`)
 - CLI `oc`, `cosign`, `kustomize` ou `kubectl kustomize`
 - Droits pour créer les namespaces `gitops-demo` et `openshift-gitops`
 
@@ -42,6 +42,98 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 3. Déployer les manifestes Kustomize via Argo CD (`argocd/application.yaml`)
 4. Lancer la Pipeline Tekton pour tester, builder, signer, pousser, synchroniser Argo
 5. Vérifier la Route exposée pour la page "Derniers clients"
+
+## Guide étape par étape
+
+### Étape 0 — Préparer le cluster
+
+1. Installer les opérateurs **OpenShift GitOps** et **OpenShift Pipelines** via OperatorHub.
+2. Vérifier l'existence des namespaces `openshift-gitops` et `openshift-pipelines`.
+3. Créer (ou réutiliser) le namespace applicatif :
+
+```powershell
+oc new-project gitops-demo
+```
+
+### Étape 1 — Déployer le squelette GitOps
+
+```powershell
+oc apply -f argocd/appproject.yaml
+oc apply -f argocd/application.yaml
+```
+
+> Ajuster `spec.source.repoURL` et `targetRevision` si vous utilisez un fork ou une branche non `main`.
+
+### Étape 2 — Secrets registry et cosign
+
+1. Modifier `tekton/secret-registry.yaml` avec vos identifiants réels puis appliquer :
+
+```bash
+oc apply -f tekton/secret-registry.yaml -n gitops-demo
+```
+
+1. Générer la paire cosign et créer/mettre à jour le secret `cosign-key` dans `openshift-gitops` :
+
+```bash
+bash scripts/gen-cosign-secret.sh
+```
+
+### Étape 3 — Chaîne CI Tekton
+
+1. Appliquer la configuration Tekton Chains :
+
+```bash
+oc apply -f tekton/chains-config.yaml -n openshift-pipelines
+```
+
+1. Déployer la ServiceAccount et les Tasks :
+
+```bash
+oc apply -f tekton/serviceaccount.yaml -n gitops-demo
+oc apply -f tekton/task-tests.yaml -n gitops-demo
+oc apply -f tekton/task-build.yaml -n gitops-demo
+oc apply -f tekton/task-argocd-sync.yaml -n gitops-demo
+oc apply -f tekton/pipeline.yaml -n gitops-demo
+```
+
+1. Créer le secret `argocd-token` avec un token valide :
+
+```bash
+oc create secret generic argocd-token -n gitops-demo \
+  --from-literal=token=$(argocd account generate-token --account demo)
+```
+
+### Étape 4 — Lancer et suivre le PipelineRun
+
+```bash
+oc create -f tekton/pipelinerun.yaml -n gitops-demo
+tkn pipelinerun logs -f -n gitops-demo $(tkn pipelinerun ls -n gitops-demo -o name | head -n1)
+```
+
+### Étape 5 — Valider la livraison
+
+```powershell
+oc get pods -n gitops-demo
+oc get application customer-stack -n openshift-gitops -o jsonpath='{.status.sync.status}'
+ROUTE=$(oc get route customer-web -n gitops-demo -o jsonpath='{.spec.host}')
+curl -k https://$ROUTE | head
+```
+
+### Étape 6 — Nettoyer (optionnel)
+
+```bash
+oc delete -f tekton/pipelinerun.yaml -n gitops-demo --ignore-not-found
+oc delete project gitops-demo
+oc delete application customer-stack -n openshift-gitops --ignore-not-found
+oc delete appproject gitops-demo -n openshift-gitops --ignore-not-found
+```
+
+## Dépannage rapide
+
+- **Build Tekton en échec** : confirmer l'accès au registre airgap (`registry-credentials`) et si nécessaire passer `TLSVERIFY=false`.
+- **Signatures absentes** : vérifier que le secret `cosign-key` est associé à la ServiceAccount `pipeline-gitops` et que `tekton/chains-config.yaml` pointe vers un dépôt OCI accessible.
+- **Argo CD reste OutOfSync** : vérifier la connectivité au repo Git (`argocd app get customer-stack`) et relancer `argocd app sync customer-stack`.
+- **Job `seed-customers` en erreur** : attendre que le StatefulSet PostgreSQL soit `Ready` et consulter les logs du job (`oc logs job/seed-customers`).
 
 ## Démarrage rapide
 
@@ -108,6 +200,65 @@ npm test
 
 ## Notes air-gap
 
-- Ajuster `registry.airgap.local` et les tags dans `manifests/overlays/airgap/kustomization.yaml`
+- Ajuster `harbor.skyr.dca.scc` et les tags dans `manifests/overlays/airgap/kustomization.yaml`
 - S'assurer que les images Red Hat référencées sont mirroirées localement (UBI, nodejs, buildah, postgresql)
 - Mettre à jour `tekton/secret-argocd-token.yaml` avec un token réel (`argocd account generate-token`)
+
+### Sources d'images (source 1 / source 2)
+
+| Composant | Source 1 (amont) | Source 2 (airgap) |
+| --- | --- | --- |
+| Application web | `quay.io/example/ocp-gitops-demo-app:latest` | `harbor.skyr.dca.scc/gitops/customer-web:0.1.0` |
+| Job init PostgreSQL | `quay.io/example/ocp-gitops-demo-db-init:latest` | `harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0` |
+| Serveur PostgreSQL | `registry.redhat.io/rhel9/postgresql-15:latest` | `harbor.skyr.dca.scc/rhel9/postgresql-15:1-80` |
+| Base Node.js (tests Tekton) | `registry.access.redhat.com/ubi9/nodejs-18:latest` | `harbor.skyr.dca.scc/ubi9/nodejs-18:latest` |
+| Buildah (Task build) | `registry.redhat.io/rhel8/buildah:latest` | `harbor.skyr.dca.scc/rhel8/buildah:latest` |
+| CLI Argo CD | `registry.redhat.io/openshift4/argocd-rhel8:v2.13` | `harbor.skyr.dca.scc/openshift4/argocd-rhel8:v2.13` |
+
+## Préparation du registre Harbor
+
+### 1. Créer les projets
+
+```bash
+export HARBOR_URL="https://harbor.skyr.dca.scc"
+export HARBOR_USER="admin"
+export HARBOR_PASS="********"
+
+for project in gitops rhel9 ubi9 rhel8 openshift4; do
+  curl -k -u "${HARBOR_USER}:${HARBOR_PASS}" \
+    -H "Content-Type: application/json" \
+    -X POST "${HARBOR_URL}/api/v2.0/projects" \
+    -d "{\"project_name\":\"${project}\",\"public\":false}" \
+    || echo "Projet ${project} déjà créé";
+done
+```
+
+### 2. (Optionnel) créer un compte robot pour Tekton
+
+```bash
+curl -k -u "${HARBOR_USER}:${HARBOR_PASS}" \
+  -H "Content-Type: application/json" \
+  -X POST "${HARBOR_URL}/api/v2.0/projects/gitops/robots" \
+  -d '{"name":"tekton","access":[{"resource":"repository","action":"push","effect":"allow"},{"resource":"repository","action":"pull","effect":"allow"}]}'
+```
+
+Utiliser le mot de passe retourné pour `tekton/secret-registry.yaml`.
+
+### 3. Mirrorer les images nécessaires
+
+```bash
+skopeo copy --all docker://quay.io/example/ocp-gitops-demo-app:0.1.0 \
+  docker://harbor.skyr.dca.scc/gitops/customer-web:0.1.0
+skopeo copy --all docker://quay.io/example/ocp-gitops-demo-db-init:0.1.0 \
+  docker://harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
+skopeo copy --all docker://registry.redhat.io/rhel9/postgresql-15:1-80 \
+  docker://harbor.skyr.dca.scc/rhel9/postgresql-15:1-80
+skopeo copy --all docker://registry.access.redhat.com/ubi9/nodejs-18:latest \
+  docker://harbor.skyr.dca.scc/ubi9/nodejs-18:latest
+skopeo copy --all docker://registry.redhat.io/rhel8/buildah:latest \
+  docker://harbor.skyr.dca.scc/rhel8/buildah:latest
+skopeo copy --all docker://registry.redhat.io/openshift4/argocd-rhel8:v2.13 \
+  docker://harbor.skyr.dca.scc/openshift4/argocd-rhel8:v2.13
+```
+
+Pré-créer aussi un dépôt vide `gitops/signatures` pour Tekton Chains (il sera alimenté par la pipeline).

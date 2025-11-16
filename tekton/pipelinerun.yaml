@@ -13,9 +13,9 @@ spec:
     - name: REVISION
       value: main
     - name: APP_IMAGE
-      value: registry.airgap.local/gitops/customer-web:0.1.0
+      value: harbor.skyr.dca.scc/gitops/customer-web:0.1.0
     - name: INIT_IMAGE
-      value: registry.airgap.local/gitops/customer-db-init:0.1.0
+      value: harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
     - name: TLSVERIFY
       value: "false"
     - name: ARGOCD_TOKEN

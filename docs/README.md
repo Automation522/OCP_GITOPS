@@ -21,7 +21,7 @@ dans un environnement OpenShift 4.18 déconnecté.
 ## Mirroring des images
 
 1. Télécharger les images Red Hat nécessaires depuis le CDN (UBI9 nodejs, postgresql-15, buildah, argocd-rhel8)
-2. Pousser les images applicatives et init dans `registry.airgap.local/gitops/*`
+2. Pousser les images applicatives et init dans `harbor.skyr.dca.scc/gitops/*`
 3. Mettre à jour `tekton/secret-registry.yaml` avec les identifiants réels
 4. Référencer les tags mirroirés dans `manifests/overlays/airgap/kustomization.yaml`
 
@@ -37,7 +37,7 @@ dans un environnement OpenShift 4.18 déconnecté.
 
 1. Montrer la structure Git (`app/`, `manifests/`, `argocd/`, `tekton/`, `scripts/`)
 2. Exécuter la Pipeline Tekton et suivre les étapes dans la console OpenShift
-3. Vérifier les signatures Tekton Chains (TaskRun attested, image signée dans `registry.airgap.local/gitops/signatures`)
+3. Vérifier les signatures Tekton Chains (TaskRun attested, image signée dans `harbor.skyr.dca.scc/gitops/signatures`)
 4. Ouvrir la Route `customer-web` pour visualiser les derniers clients
 
 ## Nettoyage
