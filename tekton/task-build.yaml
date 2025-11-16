@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-and-push
+  namespace: gitops-demo
+spec:
+  params:
+    - name: IMAGE
+      type: string
+    - name: CONTEXT
+      type: string
+      default: .
+    - name: DOCKERFILE
+      type: string
+      default: Dockerfile
+    - name: TLSVERIFY
+      type: string
+      default: "true"
+  workspaces:
+    - name: source
+  steps:
+    - name: buildah
+      image: registry.redhat.io/rhel8/buildah:latest
+      securityContext:
+        privileged: true
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        cd $(workspaces.source.path)
+        buildah bud --tls-verify=$(params.TLSVERIFY) -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+        buildah push --tls-verify=$(params.TLSVERIFY) $(params.IMAGE)

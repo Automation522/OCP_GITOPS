@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gitops-demo
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: ocp-gitops-demo
+spec:
+  description: Projet Argo CD pour la démonstration OpenShift 4.18 airgap
+  sourceRepos:
+    - https://example.com/OCP_GITOPS.git
+  destinations:
+    - namespace: gitops-demo
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceBlacklist:
+    - group: tekton.dev
+      kind: TaskRun
+  orphanedResources:
+    warn: true

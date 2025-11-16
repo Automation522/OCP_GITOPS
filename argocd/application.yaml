@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: customer-stack
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: ocp-gitops-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: gitops-demo
+  source:
+    repoURL: https://example.com/OCP_GITOPS.git
+    targetRevision: main
+    path: manifests/overlays/airgap
+    kustomize:
+      forceCommonLabels: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitops-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true

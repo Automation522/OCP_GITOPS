@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: gitops-demo
+  labels:
+    app.kubernetes.io/name: customer-web
+    app.kubernetes.io/part-of: ocp-gitops-demo
+    app.kubernetes.io/component: config
+  annotations:
+    app.openshift.io/connects-to: postgres
+data:
+  PORT: "8080"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_NAME: "customers"
+  DB_SSL: "false"

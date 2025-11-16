@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: customer-web
+  namespace: gitops-demo
+  labels:
+    app.kubernetes.io/name: customer-web
+    app.kubernetes.io/part-of: ocp-gitops-demo
+spec:
+  to:
+    kind: Service
+    name: customer-web
+  tls:
+    termination: edge
+  port:
+    targetPort: http

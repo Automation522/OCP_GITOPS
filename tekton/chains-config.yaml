@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chains-config
+  namespace: openshift-pipelines
+  labels:
+    operator.tekton.dev/release: v1.13.0
+    app.kubernetes.io/part-of: ocp-gitops-demo
+data:
+  artifacts.taskrun.format: tekton
+  artifacts.taskrun.storage: oci
+  artifacts.oci.repository: registry.airgap.local/gitops/signatures
+  artifacts.oci.signer: cosign
+  transparency.enabled: "false"

@@ -1,0 +1,39 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: gitops-build-sign-
+  namespace: gitops-demo
+spec:
+  serviceAccountName: pipeline-gitops
+  timeouts:
+    pipeline: 1h0m0s
+  params:
+    - name: REPO_URL
+      value: https://example.com/OCP_GITOPS.git
+    - name: REVISION
+      value: main
+    - name: APP_IMAGE
+      value: registry.airgap.local/gitops/customer-web:0.1.0
+    - name: INIT_IMAGE
+      value: registry.airgap.local/gitops/customer-db-init:0.1.0
+    - name: TLSVERIFY
+      value: "false"
+    - name: ARGOCD_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: argocd-token
+          key: token
+    - name: ARGOCD_SERVER
+      value: argocd-server.openshift-gitops.svc.cluster.local:443
+    - name: ARGOCD_APP
+      value: customer-stack
+  workspaces:
+    - name: shared
+      volumeClaimTemplate:
+        metadata:
+          name: pipeline-workspace
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi

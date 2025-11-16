@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: run-node-tests
+  namespace: gitops-demo
+spec:
+  params:
+    - name: APP_PATH
+      type: string
+      default: app
+  workspaces:
+    - name: source
+  steps:
+    - name: npm-test
+      image: registry.access.redhat.com/ubi9/nodejs-18:latest
+      workingDir: $(workspaces.source.path)/$(params.APP_PATH)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        npm ci
+        npm test

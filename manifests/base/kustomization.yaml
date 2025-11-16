@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: gitops-demo
+resources:
+  - namespace.yaml
+  - configmap-app.yaml
+  - secret-db.yaml
+  - postgres-service.yaml
+  - postgres-statefulset.yaml
+  - app-service.yaml
+  - app-deployment.yaml
+  - app-route.yaml
+  - init-job.yaml
+commonLabels:
+  app.kubernetes.io/managed-by: gitops
+images:
+  - name: quay.io/example/ocp-gitops-demo-app
+    newTag: latest
+  - name: quay.io/example/ocp-gitops-demo-db-init
+    newTag: latest
+  - name: registry.redhat.io/rhel9/postgresql-15
+    newTag: latest

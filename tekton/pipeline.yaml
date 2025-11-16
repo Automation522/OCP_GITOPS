@@ -1,0 +1,97 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: gitops-build-sign
+  namespace: gitops-demo
+spec:
+  params:
+    - name: REPO_URL
+      type: string
+    - name: REVISION
+      type: string
+      default: main
+    - name: APP_IMAGE
+      type: string
+    - name: INIT_IMAGE
+      type: string
+    - name: TLSVERIFY
+      type: string
+      default: "true"
+    - name: ARGOCD_TOKEN
+      type: string
+    - name: ARGOCD_SERVER
+      type: string
+      default: argocd-server.openshift-gitops.svc.cluster.local:443
+    - name: ARGOCD_APP
+      type: string
+      default: customer-stack
+  workspaces:
+    - name: shared
+  tasks:
+    - name: fetch-repo
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.REPO_URL)
+        - name: revision
+          value: $(params.REVISION)
+        - name: deleteExisting
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared
+    - name: unit-tests
+      runAfter: [fetch-repo]
+      taskRef:
+        name: run-node-tests
+      params:
+        - name: APP_PATH
+          value: app
+      workspaces:
+        - name: source
+          workspace: shared
+    - name: build-web
+      runAfter: [unit-tests]
+      taskRef:
+        name: build-and-push
+      params:
+        - name: IMAGE
+          value: $(params.APP_IMAGE)
+        - name: DOCKERFILE
+          value: Dockerfile
+        - name: CONTEXT
+          value: app
+        - name: TLSVERIFY
+          value: $(params.TLSVERIFY)
+      workspaces:
+        - name: source
+          workspace: shared
+    - name: build-init
+      runAfter: [build-web]
+      taskRef:
+        name: build-and-push
+      params:
+        - name: IMAGE
+          value: $(params.INIT_IMAGE)
+        - name: DOCKERFILE
+          value: Dockerfile
+        - name: CONTEXT
+          value: app/db
+        - name: TLSVERIFY
+          value: $(params.TLSVERIFY)
+      workspaces:
+        - name: source
+          workspace: shared
+    - name: argocd-sync
+      runAfter: [build-init]
+      taskRef:
+        name: argocd-sync
+      params:
+        - name: ARGOCD_SERVER
+          value: $(params.ARGOCD_SERVER)
+        - name: ARGOCD_APP
+          value: $(params.ARGOCD_APP)
+        - name: ARGOCD_TOKEN
+          value: $(params.ARGOCD_TOKEN)
