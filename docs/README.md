@@ -33,6 +33,20 @@ dans un environnement OpenShift 4.18 déconnecté.
 4. Créer `tekton/secret-argocd-token.yaml` avec un token valide (`argocd account generate-token`)
 5. Déclencher `tekton/pipelinerun.yaml` (ou via trigger custom)
 
+### Rôle des manifestes Tekton
+
+| Fichier | Description |
+| --- | --- |
+| `tekton/serviceaccount.yaml` | Compte de service `pipeline-gitops` qui référence les secrets `registry-credentials` (pull/push) et `cosign-key` (signatures). |
+| `tekton/secret-registry.yaml` | Secret type dockerconfigjson/annotation Tekton qui fournit l'accès à `harbor.skyr.dca.scc`. À adapter avec vos identifiants ou robot account. |
+| `tekton/secret-argocd-token.yaml` | Secret opaque contenant le token API Argo CD utilisé par la Task `argocd-sync` pour lancer `argocd app sync`. |
+| `tekton/task-tests.yaml` | Task `run-node-tests` qui exécute `npm ci && npm test` dans l'image UBI Node.js et s'assure que l'application est saine avant build. |
+| `tekton/task-build.yaml` | Task `build-and-push` basée sur Buildah (mode privilégié) pour builder et pousser les images `customer-web` et `customer-db-init` avec vérification TLS paramétrable. |
+| `tekton/task-argocd-sync.yaml` | Task qui embarque le CLI Argo CD pour se connecter (grpc-web), synchroniser l'application `customer-stack` et attendre qu'elle soit healthy. |
+| `tekton/pipeline.yaml` | Pipeline `gitops-build-sign` orchestrant git clone → tests → build images → sync Argo. Les paramètres `APP_IMAGE`, `INIT_IMAGE`, `TLSVERIFY`, `ARGOCD_*` permettent l'adaptation à l'environnement airgap. |
+| `tekton/pipelinerun.yaml` | Exemple de `PipelineRun` avec PVC éphémère, paramètres pointant sur Harbor et référence au secret `argocd-token`. Sert de canevas pour déclencher manuellement la chaîne. |
+| `tekton/chains-config.yaml` | ConfigMap appliquée dans `openshift-pipelines` pour activer Tekton Chains avec stockage OCI (`harbor.skyr.dca.scc/gitops/signatures`) et signer via cosign. |
+
 ## Déroulé de la démo
 
 1. Montrer la structure Git (`app/`, `manifests/`, `argocd/`, `tekton/`, `scripts/`)
