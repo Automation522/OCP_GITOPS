@@ -8,7 +8,7 @@ metadata:
 spec:
   description: Projet Argo CD pour la démonstration OpenShift 4.18 airgap
   sourceRepos:
-    - https://example.com/OCP_GITOPS.git
+    - https://bastion.skyr.dca.scc:3000/OCP_GITOPS.git
   destinations:
     - namespace: gitops-demo
       server: https://kubernetes.default.svc

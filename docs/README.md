@@ -24,6 +24,7 @@ dans un environnement OpenShift 4.18 déconnecté.
 2. Pousser les images applicatives et init dans `harbor.skyr.dca.scc/gitops/*`
 3. Mettre à jour `tekton/secret-registry.yaml` avec les identifiants réels
 4. Référencer les tags mirroirés dans `manifests/overlays/airgap/kustomization.yaml`
+5. Cloner/pointer le dépôt Git `https://bastion.skyr.dca.scc:3000/OCP_GITOPS.git` pour Argo CD et Tekton
 
 ## Chaîne CI Tekton
 
