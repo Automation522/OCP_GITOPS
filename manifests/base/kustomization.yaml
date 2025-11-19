@@ -11,6 +11,7 @@ resources:
   - app-deployment.yaml
   - app-route.yaml
   - init-job.yaml
+  - rolebinding-argocd-controller.yaml
 commonLabels:
   app.kubernetes.io/managed-by: gitops
 images:

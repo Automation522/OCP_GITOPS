@@ -152,6 +152,7 @@ oc delete appproject gitops-demo -n openshift-gitops --ignore-not-found
 * *Build Tekton en échec* : vérifier le secret `registry-credentials` et éventuellement passer `TLSVERIFY=false`.
 * *Signatures absentes* : s'assurer que `cosign-key` est monté sur `pipeline-gitops` et que `tekton/chains-config.yaml` pointe vers un dépôt OCI accessible.
 * *Argo CD OutOfSync* : contrôler la connectivité Git (`argocd app get customer-stack`) puis forcer `argocd app sync customer-stack`.
+* *Argo CD SyncFailed (forbidden)* : vérifier que `manifests/base/rolebinding-argocd-controller.yaml` lie le ClusterRole `edit` au SA `openshift-gitops-argocd-application-controller` dans `gitops-demo`.
 * *Erreur certificat Git (x509)* : si le serveur Git possède un certificat auto-signé, insérer `insecure: true` sous `spec.source` dans `argocd/application.yaml` (déjà présent pour `bastion.skyr.dca.scc:3000`).
 * *Job `seed-customers` en erreur* : patienter jusqu'à ce que PostgreSQL soit `Ready` et examiner `oc logs job/seed-customers`.
 

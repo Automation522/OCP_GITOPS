@@ -48,6 +48,8 @@ ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
 
 Ce script applique `argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml`, `argocd/clusterrole-argo-admin.yaml`, `argocd/clusterrolebinding-argo-admin.yaml` et `argocd/rolebinding-namespace-access.yaml` (donne `view` sur `openshift-gitops` pour autoriser `oc project openshift-gitops`), puis exécute `oc auth can-i --as=demoscc ...` pour valider que l'utilisateur peut gérer `applications` et `appprojects`. Vous pouvez surcharger `ARGOCD_USER` ou `ARGOCD_NAMESPACE` au besoin.
 
+> Remarque : le fichier `manifests/base/rolebinding-argocd-controller.yaml` donne automatiquement le ClusterRole `edit` au ServiceAccount `openshift-gitops-argocd-application-controller` dans `gitops-demo`, évitant les erreurs `forbidden` lors de la création des ressources applicatives.
+
 ### Rôle des manifestes Tekton
 
 | Fichier | Description |
