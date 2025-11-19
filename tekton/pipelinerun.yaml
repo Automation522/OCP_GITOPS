@@ -4,6 +4,8 @@ metadata:
   generateName: gitops-build-sign-
   namespace: gitops-demo
 spec:
+  pipelineRef:
+    name: gitops-build-sign
   serviceAccountName: pipeline-gitops
   timeouts:
     pipeline: 1h0m0s
@@ -18,15 +20,14 @@ spec:
       value: harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
     - name: TLSVERIFY
       value: "false"
-    - name: ARGOCD_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: argocd-token
-          key: token
     - name: ARGOCD_SERVER
       value: argocd-server.openshift-gitops.svc.cluster.local:443
     - name: ARGOCD_APP
       value: customer-stack
+    - name: ARGOCD_SECRET_NAME
+      value: argocd-token
+    - name: ARGOCD_SECRET_KEY
+      value: token
   workspaces:
     - name: shared
       volumeClaimTemplate:

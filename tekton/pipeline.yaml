@@ -17,14 +17,18 @@ spec:
     - name: TLSVERIFY
       type: string
       default: "true"
-    - name: ARGOCD_TOKEN
-      type: string
     - name: ARGOCD_SERVER
       type: string
       default: argocd-server.openshift-gitops.svc.cluster.local:443
     - name: ARGOCD_APP
       type: string
       default: customer-stack
+    - name: ARGOCD_SECRET_NAME
+      type: string
+      default: argocd-token
+    - name: ARGOCD_SECRET_KEY
+      type: string
+      default: token
   workspaces:
     - name: shared
   tasks:
@@ -98,5 +102,7 @@ spec:
           value: $(params.ARGOCD_SERVER)
         - name: ARGOCD_APP
           value: $(params.ARGOCD_APP)
-        - name: ARGOCD_TOKEN
-          value: $(params.ARGOCD_TOKEN)
+        - name: ARGOCD_SECRET_NAME
+          value: $(params.ARGOCD_SECRET_NAME)
+        - name: ARGOCD_SECRET_KEY
+          value: $(params.ARGOCD_SECRET_KEY)

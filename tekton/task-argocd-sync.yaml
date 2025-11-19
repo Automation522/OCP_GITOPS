@@ -11,15 +11,25 @@ spec:
     - name: ARGOCD_APP
       type: string
       default: customer-stack
-    - name: ARGOCD_TOKEN
+    - name: ARGOCD_SECRET_NAME
       type: string
+      default: argocd-token
+    - name: ARGOCD_SECRET_KEY
+      type: string
+      default: token
   steps:
     - name: sync
       image: harbor.skyr.dca.scc/gitops/argocd:v2.13.3
+      env:
+        - name: ARGOCD_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.ARGOCD_SECRET_NAME)
+              key: $(params.ARGOCD_SECRET_KEY)
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
         export ARGOCD_OPTS="--grpc-web"
-        argocd login $(params.ARGOCD_SERVER) --auth-token $(params.ARGOCD_TOKEN) --insecure
+        argocd login $(params.ARGOCD_SERVER) --auth-token "$ARGOCD_AUTH_TOKEN" --insecure
         argocd app sync $(params.ARGOCD_APP)
         argocd app wait $(params.ARGOCD_APP) --sync --health
