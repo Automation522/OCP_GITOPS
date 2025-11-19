@@ -174,7 +174,7 @@ chmod +x scripts/apply-argocd-rbac.sh
 ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
 ----
 
-Le script applique les manifests RBAC (`argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml`, `argocd/rolebinding-namespace-access.yaml` pour exposer le `ClusterRole` `view` et autoriser `oc project openshift-gitops`) puis vérifie les droits via `oc auth can-i --as=demoscc`. Ajustez `ARGOCD_USER`/`ARGOCD_NAMESPACE` selon votre contexte.
+Le script applique les manifests RBAC (`argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml`, `argocd/clusterrole-argo-admin.yaml`, `argocd/clusterrolebinding-argo-admin.yaml`, `argocd/rolebinding-namespace-access.yaml` pour exposer le `ClusterRole` `view` et autoriser `oc project openshift-gitops`) puis vérifie les droits via `oc auth can-i --as=demoscc`. Ajustez `ARGOCD_USER`/`ARGOCD_NAMESPACE` selon votre contexte.
 
 === 2. Secrets registry + cosign
 

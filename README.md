@@ -150,7 +150,7 @@ ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
 
 > Ajustez `ARGOCD_USER` / `ARGOCD_NAMESPACE` si vous utilisez un autre compte ou un autre namespace Argo CD.
 
-Le script applique `argocd/role-argo-admin.yaml`, `rolebinding-argo-admin.yaml` ainsi que `rolebinding-namespace-access.yaml` (expose le `ClusterRole` `view` pour autoriser `oc project openshift-gitops`), puis vérifie les droits via `oc auth can-i --as=demoscc ...`.
+Le script applique `argocd/role-argo-admin.yaml`, `rolebinding-argo-admin.yaml`, `clusterrole-argo-admin.yaml`, `clusterrolebinding-argo-admin.yaml` ainsi que `rolebinding-namespace-access.yaml` (expose le `ClusterRole` `view` pour autoriser `oc project openshift-gitops`), puis vérifie les droits via `oc auth can-i --as=demoscc ...`.
 
 ### 2. Secrets registry + cosign
 

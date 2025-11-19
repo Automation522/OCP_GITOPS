@@ -8,8 +8,10 @@ ARGOCD_USER=${ARGOCD_USER:-demoscc}
 role_file="${ROOT_DIR}/argocd/role-argo-admin.yaml"
 rolebinding_file="${ROOT_DIR}/argocd/rolebinding-argo-admin.yaml"
 ns_binding_file="${ROOT_DIR}/argocd/rolebinding-namespace-access.yaml"
+clusterrole_file="${ROOT_DIR}/argocd/clusterrole-argo-admin.yaml"
+clusterrolebinding_file="${ROOT_DIR}/argocd/clusterrolebinding-argo-admin.yaml"
 
-if [[ ! -f "${role_file}" || ! -f "${rolebinding_file}" || ! -f "${ns_binding_file}" ]]; then
+if [[ ! -f "${role_file}" || ! -f "${rolebinding_file}" || ! -f "${ns_binding_file}" || ! -f "${clusterrole_file}" || ! -f "${clusterrolebinding_file}" ]]; then
   echo "[ERROR] Missing role or rolebinding manifests under argocd/." >&2
   exit 1
 fi
@@ -18,6 +20,8 @@ echo "Applying Argo CD RBAC manifests in namespace ${ARGOCD_NAMESPACE}..."
 oc apply -f "${role_file}"
 oc apply -f "${rolebinding_file}"
 oc apply -f "${ns_binding_file}"
+oc apply -f "${clusterrole_file}"
+oc apply -f "${clusterrolebinding_file}"
 
 oc auth can-i --as="${ARGOCD_USER}" -n "${ARGOCD_NAMESPACE}" --resource=applications.argoproj.io get
 check_permission() {
@@ -36,5 +40,10 @@ check_permission get applications argoproj.io
 check_permission create applications argoproj.io
 check_permission get appprojects argoproj.io
 check_permission create appprojects argoproj.io
+if oc auth can-i --as="${ARGOCD_USER}" list appprojects.argoproj.io --all-namespaces >/dev/null 2>&1; then
+  echo "✔ ${ARGOCD_USER} can list appprojects.argoproj.io cluster-wide"
+else
+  echo "✖ ${ARGOCD_USER} cannot list appprojects.argoproj.io cluster-wide" >&2
+fi
 
 echo "Argo CD RBAC applied. User ${ARGOCD_USER} should now be able to manage Argo CD resources."
