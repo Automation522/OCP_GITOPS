@@ -140,6 +140,17 @@ oc apply -f argocd/appproject.yaml
 oc apply -f argocd/application.yaml
 ```
 
+> **RBAC Argo CD** : si vous exécutez la démo avec un utilisateur non-admin (`demoscc`), faites exécuter par un admin cluster :
+
+```bash
+chmod +x scripts/apply-argocd-rbac.sh
+ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
+```
+
+> Ajustez `ARGOCD_USER` / `ARGOCD_NAMESPACE` si vous utilisez un autre compte ou un autre namespace Argo CD.
+
+Le script applique `argocd/role-argo-admin.yaml` + `rolebinding-argo-admin.yaml` et vérifie les droits via `oc auth can-i --as=demoscc ...`.
+
 ### 2. Secrets registry + cosign
 
 ```bash

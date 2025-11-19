@@ -38,6 +38,15 @@ dans un environnement OpenShift 4.18 déconnecté.
 5. Créer `tekton/secret-argocd-token.yaml` avec un token valide (`argocd account generate-token`)
 6. Déclencher `tekton/pipelinerun.yaml` (ou via trigger custom)
 
+### RBAC Argo CD pour utilisateurs non-admin
+
+```bash
+chmod +x scripts/apply-argocd-rbac.sh
+ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
+```
+
+Ce script applique `argocd/role-argo-admin.yaml` et `argocd/rolebinding-argo-admin.yaml` dans `openshift-gitops`, puis exécute `oc auth can-i --as=demoscc ...` pour valider que l'utilisateur peut gérer `applications` et `appprojects`. Vous pouvez surcharger `ARGOCD_USER` ou `ARGOCD_NAMESPACE` au besoin.
+
 ### Rôle des manifestes Tekton
 
 | Fichier | Description |

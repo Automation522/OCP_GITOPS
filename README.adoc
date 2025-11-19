@@ -165,6 +165,16 @@ oc apply -f argocd/appproject.yaml
 oc apply -f argocd/application.yaml
 ----
 
+TIP: Si vous utilisez un compte non-admin (`demoscc`), demandez à un administrateur d'exécuter :
+
+[source,bash]
+----
+chmod +x scripts/apply-argocd-rbac.sh
+ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
+----
+
+Le script applique les manifests RBAC (`argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml`) puis vérifie les droits via `oc auth can-i --as=demoscc`. Ajustez `ARGOCD_USER`/`ARGOCD_NAMESPACE` selon votre contexte.
+
 === 2. Secrets registry + cosign
 
 [source,bash]
