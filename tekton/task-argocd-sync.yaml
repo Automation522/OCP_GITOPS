@@ -15,7 +15,7 @@ spec:
       type: string
   steps:
     - name: sync
-      image: registry.redhat.io/openshift4/argocd-rhel8:v2.13
+      image: harbor.skyr.dca.scc/gitops/argocd:v2.13.3
       script: |
         #!/usr/bin/env bash
         set -euo pipefail

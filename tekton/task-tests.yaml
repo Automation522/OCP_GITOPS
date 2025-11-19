@@ -12,7 +12,7 @@ spec:
     - name: source
   steps:
     - name: npm-test
-      image: registry.access.redhat.com/ubi9/nodejs-18:latest
+      image: harbor.skyr.dca.scc/gitops/nodejs-18:latest
       workingDir: $(workspaces.source.path)/$(params.APP_PATH)
       script: |
         #!/usr/bin/env bash

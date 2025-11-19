@@ -18,12 +18,6 @@ tekton/         Pipelines, Tasks et PipelineRuns Tekton
 scripts/        Outils auxiliaires (ex: génération secret cosign)
 docs/           Documentation détaillée (airgap, CI/CD, opérations)
 ```
-
-## Aperçu rapide
-
-| Composant | Détails |
-| --- | --- |
-| Application | Node.js/Express (3 pods) + PostgreSQL 15 (StatefulSet 1 réplique, PVC RWX ceph-fs) |
 | Déploiement | Kustomize (`manifests/base` + overlay `manifests/overlays/airgap`) suivi par Argo CD |
 | CI/CD | Pipeline Tekton (tests → build/push → signature cosign → sync Argo) + Tekton Chains |
 | Air-gap | Images mirroirées dans `harbor.skyr.dca.scc`, secrets registry + cosign en namespace `gitops-demo` |
@@ -31,7 +25,7 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 ## Prérequis
 
 - Cluster OpenShift 4.18 avec OpenShift GitOps (Argo CD) et OpenShift Pipelines (Tekton)
-- Accès au registre miroir `registry.airgap.local` (secret `registry-credentials`)
+- Accès au registre miroir `harbor.skyr.dca.scc` (secret `registry-credentials`)
 - CLI `oc`, `cosign`, `kustomize` ou `kubectl kustomize`
 - Droits pour créer les namespaces `gitops-demo` et `openshift-gitops`
 
@@ -200,7 +194,7 @@ npm test
 
 ## Notes air-gap
 
-- Ajuster `harbor.skyr.dca.scc` et les tags dans `manifests/overlays/airgap/kustomization.yaml`
+- Ajuster `harbor.skyr.dca.scc` et les tags dans `manifests/base/kustomization.yaml`
 - S'assurer que les images Red Hat référencées sont mirroirées localement (UBI, nodejs, buildah, postgresql)
 - Mettre à jour `tekton/secret-argocd-token.yaml` avec un token réel (`argocd account generate-token`)
 
@@ -208,12 +202,12 @@ npm test
 
 | Composant | Source 1 (amont) | Source 2 (airgap) |
 | --- | --- | --- |
-| Application web | `quay.io/example/ocp-gitops-demo-app:latest` | `harbor.skyr.dca.scc/gitops/customer-web:0.1.0` |
-| Job init PostgreSQL | `quay.io/example/ocp-gitops-demo-db-init:latest` | `harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0` |
-| Serveur PostgreSQL | `registry.redhat.io/rhel9/postgresql-15:latest` | `harbor.skyr.dca.scc/rhel9/postgresql-15:1-80` |
-| Base Node.js (tests Tekton) | `registry.access.redhat.com/ubi9/nodejs-18:latest` | `harbor.skyr.dca.scc/ubi9/nodejs-18:latest` |
-| Buildah (Task build) | `registry.redhat.io/rhel8/buildah:latest` | `harbor.skyr.dca.scc/rhel8/buildah:latest` |
-| CLI Argo CD | `registry.redhat.io/openshift4/argocd-rhel8:v2.13` | `harbor.skyr.dca.scc/openshift4/argocd-rhel8:v2.13` |
+| Application web | `build-local (podman build ./app)` | `harbor.skyr.dca.scc/gitops/customer-web:0.1.0` |
+| Job init PostgreSQL | `build-local (podman build ./app/db)` | `harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0` |
+| Serveur PostgreSQL | `registry.redhat.io/rhel9/postgresql-15:latest` | `harbor.skyr.dca.scc/gitops/postgresql-15:latest` |
+| Base Node.js (tests Tekton) | `registry.access.redhat.com/ubi9/nodejs-18:latest` | `harbor.skyr.dca.scc/gitops/nodejs-18:latest` |
+| Buildah (Task build) | `registry.redhat.io/rhel8/buildah:latest` | `harbor.skyr.dca.scc/gitops/buildah:latest` |
+| CLI Argo CD | `quay.io/argoproj/argocd:v2.13.3` | `harbor.skyr.dca.scc/gitops/argocd:v2.13.3` |
 
 ## Préparation du registre Harbor
 
@@ -247,18 +241,21 @@ Utiliser le mot de passe retourné pour `tekton/secret-registry.yaml`.
 ### 3. Mirrorer les images nécessaires
 
 ```bash
-skopeo copy --all docker://quay.io/example/ocp-gitops-demo-app:0.1.0 \
-  docker://harbor.skyr.dca.scc/gitops/customer-web:0.1.0
-skopeo copy --all docker://quay.io/example/ocp-gitops-demo-db-init:0.1.0 \
-  docker://harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
-skopeo copy --all docker://registry.redhat.io/rhel9/postgresql-15:1-80 \
-  docker://harbor.skyr.dca.scc/rhel9/postgresql-15:1-80
+# Construire et pousser les images applicatives locales
+podman build -t harbor.skyr.dca.scc/gitops/customer-web:0.1.0 app
+podman push harbor.skyr.dca.scc/gitops/customer-web:0.1.0
+podman build -t harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0 app/db
+podman push harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
+
+# Mirrorer les images Red Hat
+skopeo copy --all docker://registry.redhat.io/rhel9/postgresql-15:latest \
+  docker://harbor.skyr.dca.scc/gitops/postgresql-15:latest
 skopeo copy --all docker://registry.access.redhat.com/ubi9/nodejs-18:latest \
-  docker://harbor.skyr.dca.scc/ubi9/nodejs-18:latest
+  docker://harbor.skyr.dca.scc/gitops/nodejs-18:latest
 skopeo copy --all docker://registry.redhat.io/rhel8/buildah:latest \
-  docker://harbor.skyr.dca.scc/rhel8/buildah:latest
-skopeo copy --all docker://registry.redhat.io/openshift4/argocd-rhel8:v2.13 \
-  docker://harbor.skyr.dca.scc/openshift4/argocd-rhel8:v2.13
+  docker://harbor.skyr.dca.scc/gitops/buildah:latest
+skopeo copy --all docker://quay.io/argoproj/argocd:v2.13.3 \
+  docker://harbor.skyr.dca.scc/gitops/argocd:v2.13.3
 ```
 
 Pré-créer aussi un dépôt vide `gitops/signatures` pour Tekton Chains (il sera alimenté par la pipeline).

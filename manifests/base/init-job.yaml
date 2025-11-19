@@ -17,7 +17,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: seed
-          image: quay.io/example/ocp-gitops-demo-db-init:latest
+          image: harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
           env:
             - name: PGHOST
               value: postgres

@@ -20,7 +20,7 @@ spec:
     - name: source
   steps:
     - name: buildah
-      image: registry.redhat.io/rhel8/buildah:latest
+      image: harbor.skyr.dca.scc/gitops/buildah:latest
       securityContext:
         privileged: true
       script: |

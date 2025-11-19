@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: quay.io/example/ocp-gitops-demo-app:latest
+          image: harbor.skyr.dca.scc/gitops/customer-web:0.1.0
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

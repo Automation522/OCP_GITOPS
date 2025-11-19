@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-18:latest AS base
+FROM harbor.skyr.dca.scc/gitops/nodejs-18:latest AS base
 WORKDIR /opt/app
 
 COPY package*.json ./
