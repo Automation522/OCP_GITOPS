@@ -152,6 +152,7 @@ oc delete appproject gitops-demo -n openshift-gitops --ignore-not-found
 * *Build Tekton en échec* : vérifier le secret `registry-credentials` et éventuellement passer `TLSVERIFY=false`.
 * *Signatures absentes* : s'assurer que `cosign-key` est monté sur `pipeline-gitops` et que `tekton/chains-config.yaml` pointe vers un dépôt OCI accessible.
 * *Argo CD OutOfSync* : contrôler la connectivité Git (`argocd app get customer-stack`) puis forcer `argocd app sync customer-stack`.
+* *Erreur certificat Git (x509)* : si le serveur Git possède un certificat auto-signé, insérer `insecure: true` sous `spec.source` dans `argocd/application.yaml` (déjà présent pour `bastion.skyr.dca.scc:3000`).
 * *Job `seed-customers` en erreur* : patienter jusqu'à ce que PostgreSQL soit `Ready` et examiner `oc logs job/seed-customers`.
 
 == Démarrage rapide
@@ -173,7 +174,7 @@ chmod +x scripts/apply-argocd-rbac.sh
 ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
 ----
 
-Le script applique les manifests RBAC (`argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml`) puis vérifie les droits via `oc auth can-i --as=demoscc`. Ajustez `ARGOCD_USER`/`ARGOCD_NAMESPACE` selon votre contexte.
+Le script applique les manifests RBAC (`argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml`, `argocd/rolebinding-namespace-access.yaml` pour exposer le `ClusterRole` `view` et autoriser `oc project openshift-gitops`) puis vérifie les droits via `oc auth can-i --as=demoscc`. Ajustez `ARGOCD_USER`/`ARGOCD_NAMESPACE` selon votre contexte.
 
 === 2. Secrets registry + cosign
 

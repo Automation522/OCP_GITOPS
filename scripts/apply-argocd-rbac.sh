@@ -7,8 +7,9 @@ ARGOCD_USER=${ARGOCD_USER:-demoscc}
 
 role_file="${ROOT_DIR}/argocd/role-argo-admin.yaml"
 rolebinding_file="${ROOT_DIR}/argocd/rolebinding-argo-admin.yaml"
+ns_binding_file="${ROOT_DIR}/argocd/rolebinding-namespace-access.yaml"
 
-if [[ ! -f "${role_file}" || ! -f "${rolebinding_file}" ]]; then
+if [[ ! -f "${role_file}" || ! -f "${rolebinding_file}" || ! -f "${ns_binding_file}" ]]; then
   echo "[ERROR] Missing role or rolebinding manifests under argocd/." >&2
   exit 1
 fi
@@ -16,6 +17,7 @@ fi
 echo "Applying Argo CD RBAC manifests in namespace ${ARGOCD_NAMESPACE}..."
 oc apply -f "${role_file}"
 oc apply -f "${rolebinding_file}"
+oc apply -f "${ns_binding_file}"
 
 oc auth can-i --as="${ARGOCD_USER}" -n "${ARGOCD_NAMESPACE}" --resource=applications.argoproj.io get
 check_permission() {

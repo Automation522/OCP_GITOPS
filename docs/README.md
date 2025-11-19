@@ -25,7 +25,8 @@ dans un environnement OpenShift 4.18 déconnecté.
 3. Pousser les images applicatives et init dans `harbor.skyr.dca.scc/gitops/*`
 4. Mettre à jour `tekton/secret-registry.yaml` avec les identifiants réels
 5. Référencer les tags mirroirés dans `manifests/base/kustomization.yaml`
-5. Cloner/pointer le dépôt Git `https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git` pour Argo CD et Tekton
+6. Cloner/pointer le dépôt Git `https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git` pour Argo CD et Tekton
+7. Si certificat Git auto-signé, ajouter `insecure: true` dans `argocd/application.yaml` sous `spec.source` (déjà configuré pour ce dépôt)
 
 ## Chaîne CI Tekton
 
@@ -45,7 +46,7 @@ chmod +x scripts/apply-argocd-rbac.sh
 ARGOCD_USER=demoscc bash scripts/apply-argocd-rbac.sh
 ```
 
-Ce script applique `argocd/role-argo-admin.yaml` et `argocd/rolebinding-argo-admin.yaml` dans `openshift-gitops`, puis exécute `oc auth can-i --as=demoscc ...` pour valider que l'utilisateur peut gérer `applications` et `appprojects`. Vous pouvez surcharger `ARGOCD_USER` ou `ARGOCD_NAMESPACE` au besoin.
+Ce script applique `argocd/role-argo-admin.yaml`, `argocd/rolebinding-argo-admin.yaml` et `argocd/rolebinding-namespace-access.yaml` (donne `view` sur `openshift-gitops` pour autoriser `oc project openshift-gitops`), puis exécute `oc auth can-i --as=demoscc ...` pour valider que l'utilisateur peut gérer `applications` et `appprojects`. Vous pouvez surcharger `ARGOCD_USER` ou `ARGOCD_NAMESPACE` au besoin.
 
 ### Rôle des manifestes Tekton
 
