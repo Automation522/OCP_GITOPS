@@ -241,11 +241,11 @@ npm test
 | Composant | Source 1 (amont) | Source 2 (airgap)
 
 | Application web
-| `build-local (podman build ./app)`
+| `build-local (sudo podman --runtime runc build ./app)`
 | `harbor.skyr.dca.scc/gitops/customer-web:0.1.0`
 
 | Job init PostgreSQL
-| `build-local (podman build ./app/db)`
+| `build-local (sudo podman --runtime runc build ./app/db)`
 | `harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0`
 
 | Serveur PostgreSQL
@@ -300,11 +300,11 @@ Le mot de passe renvoyé est à renseigner dans `tekton/secret-registry.yaml`.
 
 [source,bash]
 ----
-# Builder et pousser les images applicatives à partir de ce dépôt
-podman build -t harbor.skyr.dca.scc/gitops/customer-web:0.1.0 app
-podman push harbor.skyr.dca.scc/gitops/customer-web:0.1.0
-podman build -t harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0 app/db
-podman push harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
+# Builder et pousser les images applicatives à partir de ce dépôt (rootful + runtime runc)
+sudo podman build --runtime runc -t harbor.skyr.dca.scc/gitops/customer-web:0.1.0 app
+sudo podman push harbor.skyr.dca.scc/gitops/customer-web:0.1.0
+sudo podman build --runtime runc -t harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0 app/db
+sudo podman push harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
 
 # Mirrorer les images Red Hat requises
 skopeo copy --all docker://registry.redhat.io/rhel9/postgresql-15:latest \
@@ -316,5 +316,7 @@ skopeo copy --all docker://registry.redhat.io/rhel8/buildah:latest \
 skopeo copy --all docker://quay.io/argoproj/argocd:v2.13.3 \
   docker://harbor.skyr.dca.scc/gitops/argocd:v2.13.3
 ----
+
+NOTE: Sur la bastion RHEL9, Podman rootless s'appuie sur `crun` (spec OCI 1.0) et échoue sur les `RUN` (`unknown version specified`). Exécutez les builds avec `sudo podman --runtime runc ...` ou mettez à jour l'OCI runtime si vous préférez rester en rootless.
 
 Pré-créez également un dépôt vide `gitops/signatures` (il sera alimenté par Tekton Chains).

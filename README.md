@@ -217,8 +217,8 @@ npm test
 
 | Composant | Source 1 (amont) | Source 2 (airgap) |
 | --- | --- | --- |
-| Application web | `build-local (podman build ./app)` | `harbor.skyr.dca.scc/gitops/customer-web:0.1.0` |
-| Job init PostgreSQL | `build-local (podman build ./app/db)` | `harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0` |
+| Application web | `build-local (sudo podman --runtime runc build ./app)` | `harbor.skyr.dca.scc/gitops/customer-web:0.1.0` |
+| Job init PostgreSQL | `build-local (sudo podman --runtime runc build ./app/db)` | `harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0` |
 | Serveur PostgreSQL | `registry.redhat.io/rhel9/postgresql-15:latest` | `harbor.skyr.dca.scc/gitops/postgresql-15:latest` |
 | Base Node.js (tests Tekton) | `registry.access.redhat.com/ubi9/nodejs-18:latest` | `harbor.skyr.dca.scc/gitops/nodejs-18:latest` |
 | Buildah (Task build) | `registry.redhat.io/rhel8/buildah:latest` | `harbor.skyr.dca.scc/gitops/buildah:latest` |
@@ -256,11 +256,11 @@ Utiliser le mot de passe retourné pour `tekton/secret-registry.yaml`.
 ### 3. Mirrorer les images nécessaires
 
 ```bash
-# Construire et pousser les images applicatives locales
-podman build -t harbor.skyr.dca.scc/gitops/customer-web:0.1.0 app
-podman push harbor.skyr.dca.scc/gitops/customer-web:0.1.0
-podman build -t harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0 app/db
-podman push harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
+# Construire et pousser les images applicatives locales (rootful + runtime runc)
+sudo podman build --runtime runc -t harbor.skyr.dca.scc/gitops/customer-web:0.1.0 app
+sudo podman push harbor.skyr.dca.scc/gitops/customer-web:0.1.0
+sudo podman build --runtime runc -t harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0 app/db
+sudo podman push harbor.skyr.dca.scc/gitops/customer-db-init:0.1.0
 
 # Mirrorer les images Red Hat
 skopeo copy --all docker://registry.redhat.io/rhel9/postgresql-15:latest \
@@ -272,5 +272,7 @@ skopeo copy --all docker://registry.redhat.io/rhel8/buildah:latest \
 skopeo copy --all docker://quay.io/argoproj/argocd:v2.13.3 \
   docker://harbor.skyr.dca.scc/gitops/argocd:v2.13.3
 ```
+
+> Sur cette bastion RHEL9, Podman rootless utilise `crun` (spec OCI 1.0) et échoue lors des builds (`unknown version specified`). Utilisez `sudo podman --runtime runc ...` ou mettez à jour l'OCI runtime si vous souhaitez rester en rootless.
 
 Pré-créer aussi un dépôt vide `gitops/signatures` pour Tekton Chains (il sera alimenté par la pipeline).

@@ -27,6 +27,7 @@ dans un environnement OpenShift 4.18 déconnecté.
 5. Référencer les tags mirroirés dans `manifests/base/kustomization.yaml`
 6. Cloner/pointer le dépôt Git `https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git` pour Argo CD et Tekton
 7. Si certificat Git auto-signé, ajouter `insecure: true` dans `argocd/application.yaml` sous `spec.source` (déjà configuré pour ce dépôt)
+8. Sur la bastion RHEL9, lancer les builds/push locaux avec `sudo podman --runtime runc ...` (le mode rootless basé sur `crun` échoue avec `unknown version specified`).
 
 ## Chaîne CI Tekton
 
