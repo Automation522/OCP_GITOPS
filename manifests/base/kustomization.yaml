@@ -12,6 +12,8 @@ resources:
   - app-route.yaml
   - init-job.yaml
   - rolebinding-argocd-controller.yaml
+  - role-secret-manager.yaml
+  - rolebinding-secret-manager.yaml
 commonLabels:
   app.kubernetes.io/managed-by: gitops
 images:

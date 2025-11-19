@@ -20,7 +20,7 @@ COSIGN_PASSWORD=${COSIGN_PASSWORD:-$(openssl rand -base64 32)}
 export COSIGN_PASSWORD
 
 echo "[*] Génération de la paire de clés cosign..."
-cosign generate-key-pair --output-key "${KEY_DIR}/cosign.key" --output-pub "${KEY_DIR}/cosign.pub"
+cosign generate-key-pair --output-key-prefix "${KEY_DIR}/cosign"
 
 echo "[*] Création/ajout du secret ${SECRET_NAME} dans ${NAMESPACE}"
 oc delete secret "${SECRET_NAME}" -n "${NAMESPACE}" --ignore-not-found
