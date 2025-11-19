@@ -30,6 +30,7 @@ spec:
   tasks:
     - name: fetch-repo
       taskRef:
+        apiVersion: tekton.dev/v1
         kind: ClusterTask
         name: git-clone
       params:
@@ -45,6 +46,7 @@ spec:
     - name: unit-tests
       runAfter: [fetch-repo]
       taskRef:
+        apiVersion: tekton.dev/v1
         name: run-node-tests
       params:
         - name: APP_PATH
@@ -55,6 +57,7 @@ spec:
     - name: build-web
       runAfter: [unit-tests]
       taskRef:
+        apiVersion: tekton.dev/v1
         name: build-and-push
       params:
         - name: IMAGE
@@ -71,6 +74,7 @@ spec:
     - name: build-init
       runAfter: [build-web]
       taskRef:
+        apiVersion: tekton.dev/v1
         name: build-and-push
       params:
         - name: IMAGE
@@ -87,6 +91,7 @@ spec:
     - name: argocd-sync
       runAfter: [build-init]
       taskRef:
+        apiVersion: tekton.dev/v1
         name: argocd-sync
       params:
         - name: ARGOCD_SERVER
