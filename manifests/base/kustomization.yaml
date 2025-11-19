@@ -1,6 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: gitops-demo
 resources:
   - namespace.yaml
   - configmap-app.yaml
@@ -14,6 +13,8 @@ resources:
   - rolebinding-argocd-controller.yaml
   - role-secret-manager.yaml
   - rolebinding-secret-manager.yaml
+  - role-cosign-secret-manager.yaml
+  - rolebinding-cosign-secret-manager.yaml
 commonLabels:
   app.kubernetes.io/managed-by: gitops
 images:

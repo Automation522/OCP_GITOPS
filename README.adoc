@@ -67,6 +67,16 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 oc new-project gitops-demo
 ----
 
+. Appliquer les RBAC nécessaires pour autoriser `demoscc` (ou votre utilisateur) à gérer les secrets dans `gitops-demo` et `openshift-gitops` :
+
+[source,bash]
+----
+oc apply -f manifests/base/role-secret-manager.yaml
+oc apply -f manifests/base/rolebinding-secret-manager.yaml
+oc apply -f manifests/base/role-cosign-secret-manager.yaml
+oc apply -f manifests/base/rolebinding-cosign-secret-manager.yaml
+----
+
 === Étape 1 — Déployer le squelette GitOps
 
 [source,powershell]
@@ -165,6 +175,10 @@ oc delete appproject gitops-demo -n openshift-gitops --ignore-not-found
 oc new-project gitops-demo
 oc apply -f argocd/appproject.yaml
 oc apply -f argocd/application.yaml
+oc apply -f manifests/base/role-secret-manager.yaml
+oc apply -f manifests/base/rolebinding-secret-manager.yaml
+oc apply -f manifests/base/role-cosign-secret-manager.yaml
+oc apply -f manifests/base/rolebinding-cosign-secret-manager.yaml
 ----
 
 TIP: Si vous utilisez un compte non-admin (`demoscc`), demandez à un administrateur d'exécuter :
