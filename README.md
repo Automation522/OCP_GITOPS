@@ -26,6 +26,7 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 
 - Cluster OpenShift 4.18 avec OpenShift GitOps (Argo CD) et OpenShift Pipelines (Tekton)
 - Accès au registre miroir `harbor.skyr.dca.scc` (secret `registry-credentials`)
+- Accès au dépôt Git `https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git`
 - CLI `oc`, `cosign`, `kustomize` ou `kubectl kustomize`
 - Droits pour créer les namespaces `gitops-demo` et `openshift-gitops`
 
@@ -143,6 +144,7 @@ oc apply -f argocd/application.yaml
 
 ```bash
 oc apply -f tekton/secret-registry.yaml -n gitops-demo
+oc apply -f tekton/secret-git-credentials.yaml -n gitops-demo
 bash scripts/gen-cosign-secret.sh
 ```
 

@@ -9,7 +9,7 @@ spec:
     pipeline: 1h0m0s
   params:
     - name: REPO_URL
-      value: https://bastion.skyr.dca.scc:3000/OCP_GITOPS.git
+      value: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
     - name: REVISION
       value: main
     - name: APP_IMAGE

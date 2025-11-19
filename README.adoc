@@ -42,7 +42,7 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 
 * OpenShift 4.18 avec OpenShift GitOps (Argo CD) et OpenShift Pipelines (Tekton)
 * Accès au registre miroir `harbor.skyr.dca.scc` (secret `registry-credentials`)
-* Accès au dépôt Git `https://bastion.skyr.dca.scc:3000/OCP_GITOPS.git`
+* Accès au dépôt Git `https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git`
 * CLI : `oc`, `cosign`, `kustomize`/`kubectl kustomize`
 * Droits pour créer les namespaces `gitops-demo` et `openshift-gitops`
 
@@ -84,6 +84,7 @@ TIP: Ajustez `spec.source.repoURL` et `targetRevision` si vous utilisez un fork 
 [source,bash]
 ----
 oc apply -f tekton/secret-registry.yaml -n gitops-demo
+oc apply -f tekton/secret-git-credentials.yaml -n gitops-demo
 ----
 . Générer la paire cosign et créer/mettre à jour le secret `cosign-key` dans `openshift-gitops` :
 +

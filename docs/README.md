@@ -25,15 +25,18 @@ dans un environnement OpenShift 4.18 déconnecté.
 3. Pousser les images applicatives et init dans `harbor.skyr.dca.scc/gitops/*`
 4. Mettre à jour `tekton/secret-registry.yaml` avec les identifiants réels
 5. Référencer les tags mirroirés dans `manifests/base/kustomization.yaml`
-5. Cloner/pointer le dépôt Git `https://bastion.skyr.dca.scc:3000/OCP_GITOPS.git` pour Argo CD et Tekton
+5. Cloner/pointer le dépôt Git `https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git` pour Argo CD et Tekton
 
 ## Chaîne CI Tekton
 
 1. Générer le secret cosign : `bash scripts/gen-cosign-secret.sh`
-2. Appliquer `tekton/serviceaccount.yaml`, `tekton/task-*.yaml`, `tekton/pipeline.yaml`
-3. Configurer Tekton Chains : `oc apply -f tekton/chains-config.yaml -n openshift-pipelines`
-4. Créer `tekton/secret-argocd-token.yaml` avec un token valide (`argocd account generate-token`)
-5. Déclencher `tekton/pipelinerun.yaml` (ou via trigger custom)
+2. Appliquer les secrets :
+	- `oc apply -f tekton/secret-registry.yaml -n gitops-demo`
+	- `oc apply -f tekton/secret-git-credentials.yaml -n gitops-demo`
+3. Appliquer `tekton/serviceaccount.yaml`, `tekton/task-*.yaml`, `tekton/pipeline.yaml`
+4. Configurer Tekton Chains : `oc apply -f tekton/chains-config.yaml -n openshift-pipelines`
+5. Créer `tekton/secret-argocd-token.yaml` avec un token valide (`argocd account generate-token`)
+6. Déclencher `tekton/pipelinerun.yaml` (ou via trigger custom)
 
 ### Rôle des manifestes Tekton
 
@@ -41,6 +44,7 @@ dans un environnement OpenShift 4.18 déconnecté.
 | --- | --- |
 | `tekton/serviceaccount.yaml` | Compte de service `pipeline-gitops` qui référence les secrets `registry-credentials` (pull/push) et `cosign-key` (signatures). |
 | `tekton/secret-registry.yaml` | Secret type dockerconfigjson/annotation Tekton qui fournit l'accès à `harbor.skyr.dca.scc`. À adapter avec vos identifiants ou robot account. |
+| `tekton/secret-git-credentials.yaml` | Secret `kubernetes.io/basic-auth` pour accéder au dépôt Git privé (`demoscc` / `Demoscc2025`), annoté pour que la ClusterTask `git-clone` l'utilise automatiquement. |
 | `tekton/secret-argocd-token.yaml` | Secret opaque contenant le token API Argo CD utilisé par la Task `argocd-sync` pour lancer `argocd app sync`. |
 | `tekton/task-tests.yaml` | Task `run-node-tests` qui exécute `npm ci && npm test` dans l'image UBI Node.js et s'assure que l'application est saine avant build. |
 | `tekton/task-build.yaml` | Task `build-and-push` basée sur Buildah (mode privilégié) pour builder et pousser les images `customer-web` et `customer-db-init` avec vérification TLS paramétrable. |
