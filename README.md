@@ -56,6 +56,12 @@ oc new-project gitops-demo
 oc apply -f manifests/base/rbac-access.yaml
 ```
 
+5. Associer le ServiceAccount `postgres-db` (déployé via `manifests/base/serviceaccount-postgres.yaml`) au SCC `anyuid` ou à un SCC personnalisé autorisant UID/GID 26, afin que PostgreSQL puisse tourner avec l'image Red Hat :
+
+```bash
+oc adm policy add-scc-to-user anyuid -z postgres-db -n gitops-demo
+```
+
 ### Étape 1 — Déployer le squelette GitOps
 
 ```powershell
@@ -147,6 +153,7 @@ oc new-project gitops-demo
 oc apply -f argocd/appproject.yaml
 oc apply -f argocd/application.yaml
 oc apply -f manifests/base/rbac-access.yaml
+oc adm policy add-scc-to-user anyuid -z postgres-db -n gitops-demo # à exécuter par un admin
 ```
 
 > **RBAC Argo CD** : si vous exécutez la démo avec un utilisateur non-admin (`demoscc`), faites exécuter par un admin cluster :
@@ -175,6 +182,8 @@ oc apply -f tekton/chains-config.yaml -n openshift-pipelines
 ```
 
 > Si vous utilisez un autre compte que `demoscc`, éditez `manifests/base/rbac-access.yaml` (ou exécutez `oc adm policy add-role-to-user tekton-configmap-manager <user> -n openshift-pipelines`) avant d'appliquer cette configuration.
+
+> **Important (PostgreSQL)** : l'image `postgresql-15` s'exécute avec l'UID 26. Conservez `runAsUser: 26` dans `manifests/base/postgres-statefulset.yaml` et ajoutez l'SCC `anyuid` (ou créez-en un adapté) au ServiceAccount `postgres-db` pour éviter les erreurs `unable to validate against any security context constraint`.
 
 ### 4. Installer les ressources Tekton
 

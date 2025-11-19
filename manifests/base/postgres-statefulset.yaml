@@ -18,6 +18,7 @@ spec:
         app.kubernetes.io/name: postgres
         app.kubernetes.io/part-of: ocp-gitops-demo
     spec:
+      serviceAccountName: postgres-db
       containers:
         - name: postgres
           image: harbor.skyr.dca.scc/gitops/postgresql-15:latest
