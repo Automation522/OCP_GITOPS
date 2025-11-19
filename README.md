@@ -50,13 +50,10 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 oc new-project gitops-demo
 ```
 
-4. Appliquer les RBAC nécessaires pour donner à l'utilisateur `demoscc` la gestion des secrets dans `gitops-demo` et `openshift-gitops` (ou adaptez la valeur `subjects[].name` si vous utilisez un autre compte) :
+4. Appliquer le manifest RBAC unique pour accorder tous les droits nécessaires (`gitops-demo`, `openshift-gitops`, `openshift-pipelines`). Modifiez `manifests/base/rbac-access.yaml` si vous utilisez un autre utilisateur que `demoscc` :
 
 ```bash
-oc apply -f manifests/base/role-secret-manager.yaml
-oc apply -f manifests/base/rolebinding-secret-manager.yaml
-oc apply -f manifests/base/role-cosign-secret-manager.yaml
-oc apply -f manifests/base/rolebinding-cosign-secret-manager.yaml
+oc apply -f manifests/base/rbac-access.yaml
 ```
 
 ### Étape 1 — Déployer le squelette GitOps
@@ -149,10 +146,7 @@ oc delete appproject gitops-demo -n openshift-gitops --ignore-not-found
 oc new-project gitops-demo
 oc apply -f argocd/appproject.yaml
 oc apply -f argocd/application.yaml
-oc apply -f manifests/base/role-secret-manager.yaml
-oc apply -f manifests/base/rolebinding-secret-manager.yaml
-oc apply -f manifests/base/role-cosign-secret-manager.yaml
-oc apply -f manifests/base/rolebinding-cosign-secret-manager.yaml
+oc apply -f manifests/base/rbac-access.yaml
 ```
 
 > **RBAC Argo CD** : si vous exécutez la démo avec un utilisateur non-admin (`demoscc`), faites exécuter par un admin cluster :
@@ -179,6 +173,8 @@ bash scripts/gen-cosign-secret.sh
 ```bash
 oc apply -f tekton/chains-config.yaml -n openshift-pipelines
 ```
+
+> Si vous utilisez un autre compte que `demoscc`, éditez `manifests/base/rbac-access.yaml` (ou exécutez `oc adm policy add-role-to-user tekton-configmap-manager <user> -n openshift-pipelines`) avant d'appliquer cette configuration.
 
 ### 4. Installer les ressources Tekton
 
