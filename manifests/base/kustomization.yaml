@@ -10,7 +10,6 @@ resources:
   - app-deployment.yaml
   - app-route.yaml
   - init-job.yaml
-  - rbac-access.yaml
   - serviceaccount-postgres.yaml
 commonLabels:
   app.kubernetes.io/managed-by: gitops
