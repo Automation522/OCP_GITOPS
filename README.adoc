@@ -20,6 +20,15 @@ scripts/        Outils auxiliaires (ex: génération secret cosign)
 docs/           Documentation détaillée (airgap, CI/CD, opérations)
 ----
 
+== Environnement de référence (servitudes)
+
+* OpenShift 4.18 en mode air-gap avec stockage ODF (PVC RWX)
+* FreeIPA pour l’authentification des comptes opérationnels (`demoscc`, etc.)
+* Gitea interne (`bastion.skyr.dca.scc:3000`) comme dépôt Git suivi par Argo CD
+* Harbor (`harbor.skyr.dca.scc`) comme registre miroir pour images applicatives et signatures
+* Tekton Pipelines + Tekton Chains pour la CI et la signature cosign
+* Argo CD (OpenShift GitOps) pour la synchronisation continue des manifestes
+
 == Aperçu rapide
 
 |===
@@ -120,10 +129,27 @@ oc apply -f tekton/chains-config.yaml -n openshift-pipelines
 [source,bash]
 ----
 oc apply -f tekton/serviceaccount.yaml -n gitops-demo
+oc apply -f tekton/secret-registry.yaml -n gitops-demo
+oc apply -f tekton/secret-git-credentials.yaml -n gitops-demo
+oc apply -f tekton/secret-argocd-token.yaml -n gitops-demo
 oc apply -f tekton/task-tests.yaml -n gitops-demo
 oc apply -f tekton/task-build.yaml -n gitops-demo
 oc apply -f tekton/task-argocd-sync.yaml -n gitops-demo
 oc apply -f tekton/pipeline.yaml -n gitops-demo
+----
+. Appliquer la configuration Tekton Chains (namespace `openshift-pipelines`) :
+
+[source,bash]
+----
+oc apply -f tekton/chains-config.yaml -n openshift-pipelines
+----
+. Astuce : appliquer d'un bloc tous les manifestes Tekton du namespace `gitops-demo` (hors PipelineRun) :
+
+[source,bash]
+----
+for f in serviceaccount secret-registry secret-git-credentials secret-argocd-token task-tests task-build task-argocd-sync pipeline; do
+  oc apply -f "tekton/${f}.yaml" -n gitops-demo
+done
 ----
 . Créer le secret `argocd-token` avec un token valide :
 +
@@ -138,7 +164,7 @@ oc create secret generic argocd-token -n gitops-demo \
 [source,bash]
 ----
 oc create -f tekton/pipelinerun.yaml -n gitops-demo
-tkn pipelinerun logs -f -n gitops-demo $(tkn pipelinerun ls -n gitops-demo -o name | head -n1)
+tkn pipelinerun logs -f -n gitops-demo $(tkn pipelinerun ls -n gitops-demo --output=jsonpath='{.items[0].metadata.name}')
 ----
 
 === Étape 5 — Valider la livraison
@@ -198,6 +224,8 @@ Le script applique les manifests RBAC (`argocd/role-argo-admin.yaml`, `argocd/ro
 [source,bash]
 ----
 oc apply -f tekton/secret-registry.yaml -n gitops-demo
+oc apply -f tekton/secret-git-credentials.yaml -n gitops-demo
+oc apply -f tekton/secret-argocd-token.yaml -n gitops-demo
 bash scripts/gen-cosign-secret.sh
 ----
 
@@ -216,12 +244,10 @@ TIP: L'image PostgreSQL officielle tourne avec l'UID/GID 26. Sans SCC `anyuid` (
 
 [source,bash]
 ----
-oc apply -f tekton/serviceaccount.yaml -n gitops-demo
-oc apply -f tekton/task-tests.yaml -n gitops-demo
-oc apply -f tekton/task-build.yaml -n gitops-demo
-oc apply -f tekton/task-argocd-sync.yaml -n gitops-demo
-oc apply -f tekton/pipeline.yaml -n gitops-demo
-oc apply -f tekton/secret-argocd-token.yaml -n gitops-demo
+for f in serviceaccount secret-registry secret-git-credentials secret-argocd-token task-tests task-build task-argocd-sync pipeline; do
+  oc apply -f "tekton/${f}.yaml" -n gitops-demo
+done
+oc apply -f tekton/chains-config.yaml -n openshift-pipelines
 ----
 
 === 5. Lancer un PipelineRun
