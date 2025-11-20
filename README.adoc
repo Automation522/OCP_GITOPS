@@ -76,11 +76,11 @@ docs/           Documentation détaillée (airgap, CI/CD, opérations)
 oc new-project gitops-demo
 ----
 
-. Appliquer le manifest RBAC unique (modifier `manifests/base/rbac-access.yaml` pour pointer vers votre utilisateur si nécessaire) :
+. Appliquer le manifest RBAC unique (modifier `argocd/rbac-access.yaml` pour pointer vers votre utilisateur si nécessaire) :
 
 [source,bash]
 ----
-oc apply -f manifests/base/rbac-access.yaml
+oc apply -f argocd/rbac-access.yaml
 ----
 
 . Associer le ServiceAccount `postgres-db` (déployé automatiquement) à un SCC autorisant l'UID 26, par exemple `anyuid` :
@@ -205,7 +205,7 @@ oc delete appproject gitops-demo -n openshift-gitops --ignore-not-found
 oc new-project gitops-demo
 oc apply -f argocd/appproject.yaml
 oc apply -f argocd/application.yaml
-oc apply -f manifests/base/rbac-access.yaml
+oc apply -f argocd/rbac-access.yaml
 oc adm policy add-scc-to-user anyuid -z postgres-db -n gitops-demo
 ----
 
@@ -236,7 +236,7 @@ bash scripts/gen-cosign-secret.sh
 oc apply -f tekton/chains-config.yaml -n openshift-pipelines
 ----
 
-TIP: Si vous utilisez un autre compte que `demoscc`, adaptez `manifests/base/rbac-access.yaml` ou exécutez `oc adm policy add-role-to-user tekton-configmap-manager <user> -n openshift-pipelines` avant cette étape.
+TIP: Si vous utilisez un autre compte que `demoscc`, adaptez `argocd/rbac-access.yaml` ou exécutez `oc adm policy add-role-to-user tekton-configmap-manager <user> -n openshift-pipelines` avant cette étape.
 
 TIP: L'image PostgreSQL officielle tourne avec l'UID/GID 26. Sans SCC `anyuid` (ou équivalent) assigné au ServiceAccount `postgres-db`, le StatefulSet `postgres` échouera avec `Forbidden: unable to validate against any security context constraint`.
 
