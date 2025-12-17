@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-testappli-rbac
+  namespace: argocd-rbac
+spec:
+  project: project-rbac
+  source:
+    repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+    targetRevision: main
+    path: manifests/testappli/rbac
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: testappli
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/managed-by: argocd-rbac
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-testappli-dev
+  namespace: argocd-dev
+spec:
+  project: project-dev
+  source:
+    repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+    targetRevision: main
+    path: manifests/testappli/apps/mysql
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: testappli
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-testappli-gov
+  namespace: argocd-gov
+spec:
+  project: project-gov
+  source:
+    repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+    targetRevision: main
+    path: manifests/testappli/gov
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: testappli
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

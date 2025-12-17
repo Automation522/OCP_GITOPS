@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: project-rbac
+  namespace: argocd-rbac
+spec:
+  description: Project for RBAC instance managing testappli (Roles, Bindings, and Namespace Metadata)
+  sourceRepos:
+    - https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+  destinations:
+    - namespace: testappli
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  namespaceResourceWhitelist:
+  - group: 'rbac.authorization.k8s.io'
+    kind: '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: project-dev
+  namespace: argocd-dev
+spec:
+  description: Project for Dev instance managing testappli (Apps)
+  sourceRepos:
+    - https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+  destinations:
+    - namespace: testappli
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: Service
+  - group: '*'
+    kind: Secret
+  - group: '*'
+    kind: ConfigMap
+  - group: '*'
+    kind: PersistentVolumeClaim
+  - group: '*'
+    kind: ServiceAccount
+  - group: 'apps'
+    kind: '*'
+  - group: 'route.openshift.io'
+    kind: '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: project-gov
+  namespace: argocd-gov
+spec:
+  description: Project for Gov instance managing testappli (Quotas, Limits)
+  sourceRepos:
+    - https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+  destinations:
+    - namespace: testappli
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: ResourceQuota
+  - group: ''
+    kind: LimitRange
