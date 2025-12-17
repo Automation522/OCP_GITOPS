@@ -50,27 +50,30 @@ spec:
     server: https://kubernetes.default.svc
 ```
 
-#### 2. Configuration de l'Application
-L'Application doit référencer le projet contraint.
-```yaml
-# manifests-app-proj/testappli/argocd-config/applications.yaml (Extrait)
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: app-testappli-gov
-  namespace: argocd-gov
-spec:
-  project: project-gov  # <--- Lien vers la politique de sécurité
-  source:
-    path: manifests-app-proj/testappli/gov
-    repoURL: ...
-  destination:
-    namespace: testappli
-```
+### A.3 Guide d'Installation (Variante AppProject)
 
-### A.3 Analyse
-*   **Sécurité** : Déclarative et centralisée via les CRD ArgoCD.
-*   **Visibilité** : Les violations de politiques apparaissent clairement dans l'UI ArgoCD (Sync Failed).
+**Prérequis** : Opérateur OpenShift GitOps installé.
+
+1.  **Déploiement des Instances & Namespaces**
+    On crée d'abords les 3 instances ArgoCD "vides".
+    ```bash
+    oc apply -f manifests-app-proj/instances/namespaces.yaml
+    oc apply -f manifests-app-proj/instances/argocd-instances.yaml
+    # Attendre que les pods argocd-server soient Running dans les 3 namespaces
+    ```
+
+2.  **Application de la Configuration (AppProjects + Applications)**
+    On applique la logique métier : les projets restrictifs et les applications qui pointent vers eux.
+    ```bash
+    oc apply -f manifests-app-proj/testappli/argocd-config/projects.yaml
+    oc apply -f manifests-app-proj/testappli/argocd-config/applications.yaml
+    ```
+
+3.  **Vérification**
+    ```bash
+    # Vérifier que le namespace cible a été créé par argocd-rbac
+    oc get ns testappli --show-labels
+    ```
 
 ---
 
@@ -117,25 +120,29 @@ spec:
           kinds: ["Role","RoleBinding"]
 ```
 
-#### 2. Configuration de l'Application
-L'Application est standard et utilise le projet par défaut.
-```yaml
-# manifests-exclusion/testappli/argocd-config/applications.yaml (Extrait)
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: app-testappli-dev
-  namespace: argocd-dev
-spec:
-  project: default  # <--- Pas de restriction ici, c'est le contrôleur qui filtre
-  source:
-    path: manifests-exclusion/testappli/apps/mysql
-    repoURL: ...
-```
+### B.3 Guide d'Installation (Variante Exclusions)
 
-### B.3 Analyse
-*   **Sécurité** : Intrinsèque au processus. Un admin ArgoCD ne peut pas contourner la restriction sans redémarrer l'instance.
-*   **Comportement** : Les ressources exclues sont totalement ignorées (comme si elles n'existaient pas dans le Git). Pas d'erreur de Sync, mais une "invisibilité".
+**Prérequis** : Opérateur OpenShift GitOps installé.
+
+1.  **Déploiement des Instances Configurées**
+    Cette étape est critique : elle déploie les ArgoCD déjà "durcis" avec les exclusions.
+    ```bash
+    oc apply -f manifests-exclusion/instances/namespaces.yaml
+    oc apply -f manifests-exclusion/instances/argocd-instances.yaml
+    # Attendre le redémarrage des statefulset argocd-application-controller pour prise en compte de la CM
+    ```
+
+2.  **Déploiement des Applications**
+    On déploie les applications qui utiliseront le projet `default` (mais seront filtrées par le contrôleur).
+    ```bash
+    oc apply -f manifests-exclusion/testappli/argocd-config/applications.yaml
+    ```
+
+3.  **Vérification**
+    ```bash
+    # Vérifier que les exclusions fonctionnent (Test de robustesse)
+    # Tentez d'ajouter un ResourceQuota dans le repo de argocd-dev -> Il sera ignoré.
+    ```
 
 ---
 
@@ -151,7 +158,7 @@ spec:
 
 ---
 
-## 6. Deep Dive Technique : Comprendre les Mécanismes
+## 5. Deep Dive Technique
 
 ### A. L'`installationID` : Pourquoi est-ce indispensable ?
 Quand plusieurs instances ArgoCD tournent sur le même cluster, elles risquent d'entrer en conflit sur deux points :
