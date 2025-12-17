@@ -3,9 +3,10 @@ kind: ArgoCD
 metadata:
   name: argocd-rbac
   namespace: argocd-rbac
+spec:
+  # Namespaces to manage
   namespaces:
     - testappli
-spec:
   dex:
     config: |
       logger:
@@ -60,9 +61,10 @@ kind: ArgoCD
 metadata:
   name: argocd-dev
   namespace: argocd-dev
+spec:
+  # Namespaces to manage
   namespaces:
     - testappli
-spec:
   dex:
     config: |
       logger:
@@ -124,9 +126,10 @@ kind: ArgoCD
 metadata:
   name: argocd-gov
   namespace: argocd-gov
+spec:
+  # Namespaces to manage
   namespaces:
     - testappli
-spec:
   dex:
     config: |
       logger:
