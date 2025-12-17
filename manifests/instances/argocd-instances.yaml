@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd-rbac
+  namespace: argocd-rbac
+spec:
+  server:
+    route:
+      enabled: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd-dev
+  namespace: argocd-dev
+spec:
+  server:
+    route:
+      enabled: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: argocd-gov
+  namespace: argocd-gov
+spec:
+  server:
+    route:
+      enabled: true
