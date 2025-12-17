@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd-rbac
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd-dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd-gov
