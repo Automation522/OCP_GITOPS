@@ -11,6 +11,11 @@ dans un environnement OpenShift 4.18 déconnecté.
 4. [Déroulé de la démo](#déroulé-de-la-démo)
 5. [Nettoyage](#nettoyage)
 
+## Guides additionnels
+
+- [Authentification FreeIPA](./freeipa-authentication.md) - Configuration de l'authentification LDAP via FreeIPA
+- [OpenShift Virtualization](./openshift-virtualization.md) - Installation et configuration d'OpenShift Virtualization (CNV)
+
 ## Architecture
 
 - Web : Node.js/Express (3 pods) utilisant `customer` table via PostgreSQL

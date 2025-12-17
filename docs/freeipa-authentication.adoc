@@ -1,0 +1,286 @@
+= Configuration de l'authentification FreeIPA
+
+Ce guide décrit la configuration de l'authentification LDAP via FreeIPA sur OpenShift 4.18.
+
+== Sommaire
+
+. <<prérequis>>
+. <<architecture>>
+. <<configuration>>
+. <<vérification>>
+. <<attribution-des-rôles>>
+. <<dépannage>>
+
+[[prérequis]]
+== Prérequis
+
+|===
+| Composant | Valeur
+
+| Serveur FreeIPA
+| `idm.skyr.dca.scc`
+
+| Port LDAPS
+| 636
+
+| Base DN
+| `dc=skyr,dc=dca,dc=scc`
+
+| Users DN
+| `cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc`
+
+| Bind DN
+| `uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc`
+|===
+
+[[architecture]]
+== Architecture
+
+[listing]
+----
+┌─────────────────┐      LDAPS:636      ┌─────────────────┐
+│   OpenShift     │ ──────────────────► │    FreeIPA      │
+│   OAuth Server  │                     │  idm.skyr.dca   │
+└─────────────────┘                     └─────────────────┘
+        │                                       │
+        ▼                                       ▼
+   ┌─────────┐                           ┌───────────┐
+   │ Users   │                           │ cn=users  │
+   │ Groups  │                           │ cn=groups │
+   └─────────┘                           └───────────┘
+----
+
+[[configuration]]
+== Configuration
+
+=== Étape 1 — Récupérer le certificat CA FreeIPA
+
+[source,bash]
+----
+curl -sk https://idm.skyr.dca.scc/ipa/config/ca.crt -o /tmp/freeipa-ca.crt
+----
+
+=== Étape 2 — Créer le ConfigMap pour le CA
+
+[source,bash]
+----
+export KUBECONFIG=/home/ocp-airgap/Installation/ocp4-vsphere-upi-automation-ocp4-upi/install-dir/auth/kubeconfig
+
+oc create configmap freeipa-ca \
+  --from-file=ca.crt=/tmp/freeipa-ca.crt \
+  -n openshift-config
+----
+
+=== Étape 3 — Créer le Secret pour le mot de passe bind
+
+[source,bash]
+----
+oc create secret generic freeipa-ldap-secret \
+  --from-literal=bindPassword='<MOT_DE_PASSE>' \
+  -n openshift-config
+----
+
+=== Étape 4 — Configurer OAuth
+
+[source,bash]
+----
+cat <<'EOF' | oc apply -f -
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: FreeIPA
+    mappingMethod: claim
+    type: LDAP
+    ldap:
+      attributes:
+        id:
+        - dn
+        email:
+        - mail
+        name:
+        - cn
+        preferredUsername:
+        - uid
+      bindDN: "uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc"
+      bindPassword:
+        name: freeipa-ldap-secret
+      ca:
+        name: freeipa-ca
+      insecure: false
+      url: "ldaps://idm.skyr.dca.scc:636/cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc?uid"
+EOF
+----
+
+=== Paramètres LDAP expliqués
+
+|===
+| Paramètre | Valeur | Description
+
+| `url`
+| `ldaps://idm.skyr.dca.scc:636/...?uid`
+| URL LDAP avec base de recherche et attribut de login
+
+| `bindDN`
+| `uid=openshift,...`
+| DN du compte de service pour interroger LDAP
+
+| `attributes.preferredUsername`
+| `uid`
+| Attribut utilisé comme nom d'utilisateur OpenShift
+
+| `attributes.name`
+| `cn`
+| Attribut utilisé comme nom complet
+
+| `attributes.email`
+| `mail`
+| Attribut utilisé comme email
+
+| `attributes.id`
+| `dn`
+| Attribut utilisé comme identifiant unique
+|===
+
+[[vérification]]
+== Vérification
+
+=== Vérifier le déploiement OAuth
+
+[source,bash]
+----
+# Vérifier que les pods redémarrent
+oc get pods -n openshift-authentication -w
+
+# Vérifier le cluster operator
+oc get co authentication
+----
+
+Le statut doit être `Available=True, Progressing=False, Degraded=False`.
+
+=== Tester la connexion
+
+[source,bash]
+----
+# Via oc login
+oc login -u <utilisateur_freeipa> https://api.ocp4-upi.skyr.dca.scc:6443
+
+# Via la console web
+# Ouvrir https://console-openshift-console.apps.ocp4-upi.skyr.dca.scc
+# Sélectionner "FreeIPA" comme fournisseur d'identité
+----
+
+=== Vérifier les identités créées
+
+[source,bash]
+----
+oc get users
+oc get identities
+----
+
+[[attribution-des-rôles]]
+== Attribution des rôles
+
+=== Donner les droits cluster-admin à un utilisateur
+
+[source,bash]
+----
+oc adm policy add-cluster-role-to-user cluster-admin <nom_utilisateur>
+----
+
+=== Créer un groupe et assigner des rôles
+
+[source,bash]
+----
+# Créer un groupe
+oc adm groups new admins
+
+# Ajouter un utilisateur au groupe
+oc adm groups add-users admins <nom_utilisateur>
+
+# Donner les droits cluster-admin au groupe
+oc adm policy add-cluster-role-to-group cluster-admin admins
+----
+
+=== Synchroniser les groupes FreeIPA (optionnel)
+
+Pour synchroniser automatiquement les groupes FreeIPA avec OpenShift :
+
+[source,bash]
+----
+cat <<EOF > /tmp/ldap-sync.yaml
+kind: LDAPSyncConfig
+apiVersion: v1
+url: ldaps://idm.skyr.dca.scc:636
+bindDN: "uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc"
+bindPassword:
+  file: /tmp/bindPassword
+insecure: false
+ca: /tmp/freeipa-ca.crt
+rfc2307:
+  groupsQuery:
+    baseDN: "cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc"
+    scope: sub
+    filter: "(objectClass=groupOfNames)"
+    derefAliases: never
+  groupUIDAttribute: dn
+  groupNameAttributes: [ cn ]
+  groupMembershipAttributes: [ member ]
+  usersQuery:
+    baseDN: "cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc"
+    scope: sub
+    derefAliases: never
+  userUIDAttribute: dn
+  userNameAttributes: [ uid ]
+EOF
+
+echo "Redhat2025!" > /tmp/bindPassword
+oc adm groups sync --sync-config=/tmp/ldap-sync.yaml --confirm
+rm /tmp/bindPassword
+----
+
+[[dépannage]]
+== Dépannage
+
+=== L'authentification échoue
+
+[source,bash]
+----
+# Vérifier les logs OAuth
+oc logs -n openshift-authentication deployment/oauth-openshift
+
+# Vérifier la connectivité LDAP
+curl -v --cacert /tmp/freeipa-ca.crt ldaps://idm.skyr.dca.scc:636
+
+# Vérifier le secret bindPassword
+oc get secret freeipa-ldap-secret -n openshift-config -o yaml
+----
+
+=== Erreur de certificat
+
+[source,bash]
+----
+# Vérifier que le CA est correct
+oc get configmap freeipa-ca -n openshift-config -o yaml
+
+# Comparer avec le CA téléchargé
+curl -sk https://idm.skyr.dca.scc/ipa/config/ca.crt | diff - <(oc get configmap freeipa-ca -n openshift-config -o jsonpath='{.data.ca\.crt}')
+----
+
+=== Le cluster operator authentication est Degraded
+
+[source,bash]
+----
+# Vérifier les conditions
+oc get co authentication -o jsonpath='{.status.conditions}' | jq .
+
+# Vérifier les événements
+oc get events -n openshift-authentication --sort-by='.lastTimestamp'
+----
+
+== Ressources
+
+* https://docs.openshift.com/container-platform/4.18/authentication/identity_providers/configuring-ldap-identity-provider.html[Documentation OpenShift - Configuring LDAP identity provider]
+* https://www.freeipa.org/page/Documentation[Documentation FreeIPA]
