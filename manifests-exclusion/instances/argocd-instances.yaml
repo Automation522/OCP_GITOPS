@@ -3,6 +3,8 @@ kind: ArgoCD
 metadata:
   name: argocd-rbac
   namespace: argocd-rbac
+  namespaces:
+    - testappli
 spec:
   dex:
     config: |
@@ -58,6 +60,8 @@ kind: ArgoCD
 metadata:
   name: argocd-dev
   namespace: argocd-dev
+  namespaces:
+    - testappli
 spec:
   dex:
     config: |
@@ -120,6 +124,8 @@ kind: ArgoCD
 metadata:
   name: argocd-gov
   namespace: argocd-gov
+  namespaces:
+    - testappli
 spec:
   dex:
     config: |
