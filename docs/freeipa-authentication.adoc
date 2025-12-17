@@ -10,6 +10,7 @@ Ce guide décrit la configuration de l'authentification LDAP via FreeIPA sur Ope
 . <<vérification>>
 . <<attribution-des-rôles>>
 . <<dépannage>>
+. <<argocd-integration>>
 
 [[prérequis]]
 == Prérequis
@@ -239,6 +240,70 @@ EOF
 echo "Redhat2025!" > /tmp/bindPassword
 oc adm groups sync --sync-config=/tmp/ldap-sync.yaml --confirm
 rm /tmp/bindPassword
+----
+
+[[argocd-integration]]
+== Intégration ArgoCD
+
+Cette section décrit la configuration de l'authentification FreeIPA pour les instances ArgoCD via Dex.
+
+=== Architecture
+
+[listing]
+----
+┌─────────────────┐      LDAPS:636      ┌─────────────────┐
+│     ArgoCD      │ ──────────────────► │    FreeIPA      │
+│   Dex Server    │                     │  idm.skyr.dca   │
+└─────────────────┘                     └─────────────────┘
+----
+
+=== Configuration
+
+Pour chaque instance ArgoCD (par exemple `argocd-rbac`, `argocd-dev`, `argocd-gov`), ArgoCD utilise Dex comme courtier d'identité.
+
+==== Configuration Dex
+
+La configuration est définie dans la spec de la ressource `ArgoCD`. Il est recommandé d'utiliser `rootCAData` pour éviter les problèmes de montage de volume.
+
+[source,yaml]
+----
+spec:
+  dex:
+    config: |
+      connectors:
+      - type: ldap
+        id: freeipa
+        name: FreeIPA
+        config:
+          host: idm.skyr.dca.scc:636
+          insecureNoSSL: false
+          insecureSkipVerify: false
+          rootCAData: LS0tLS... # Certificat CA encodé en Base64
+          bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
+          bindPW: Redhat2025!
+          userSearch:
+            baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
+            filter: "(objectClass=person)"
+            username: uid
+            idAttr: uid
+            emailAttr: mail
+            nameAttr: cn
+          groupSearch:
+            baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc
+            filter: "(objectClass=groupOfNames)"
+            userMatchers:
+            - userAttr: dn
+              groupAttr: member
+            nameAttr: cn
+  extraConfig:
+    argocd-cm: |
+      oidc.config: |
+        name: FreeIPA
+        issuer: https://<argocd-server-host>/api/dex
+        clientID: argo-cd
+        clientSecret: $oidc.dex.clientSecret
+        requestedScopes: ["openid", "profile", "email", "groups"]
+        rootCAData: LS0tLS... # Certificat CA de la Route OpenShift (pour que ArgoCD truste Dex)
 ----
 
 [[dépannage]]
