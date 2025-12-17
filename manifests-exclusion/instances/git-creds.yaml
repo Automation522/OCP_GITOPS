@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-credentials
+  namespace: argocd-rbac
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: git
+  url: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+  username: "votre-username" # À MODIFIER
+  password: "votre-password" # À MODIFIER
+  insecure: "true" # Mettre à "false" si certificats valides
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-credentials
+  namespace: argocd-dev
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: git
+  url: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+  username: "votre-username" # À MODIFIER
+  password: "votre-password" # À MODIFIER
+  insecure: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-credentials
+  namespace: argocd-gov
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: git
+  url: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+  username: "votre-username" # À MODIFIER
+  password: "votre-password" # À MODIFIER
+  insecure: "true"

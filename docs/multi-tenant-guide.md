@@ -13,6 +13,22 @@ L'architecture repose sur l'instanciation de **3 contrôleurs ArgoCD indépendan
 | **argocd-gov** | **Gouvernance & Quotas** | `v1/ResourceQuota`, `v1/LimitRange` | Garant de la conformité et de l'allocation des ressources. |
 | **argocd-dev** | **Workloads Applicatifs** | `apps/*` (Deployments, StatefulSets), `v1/Service`, `route.openshift.io/*` | Déploiement logiciel standard. |
 
+## 1.1 Prérequis de Connexion Git
+
+Les 3 instances ArgoCD doivent se connecter à votre dépôt Git (`https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git`).
+Comme il s'agit d'un dépôt privé/interne, vous devez configurer les identifiants via un Secret Kubernetes dans chaque namespace.
+
+**Fichier fourni** : `manifests-exclusion/instances/git-creds.yaml`
+
+**Procédure (À faire une fois pour les 3 instances)** :
+1.  Editez le fichier `manifests-exclusion/instances/git-creds.yaml`.
+2.  Remplacez `votre-username` et `votre-password` par vos identifiants Git.
+3.  Appliquez le secret :
+    ```bash
+    oc apply -f manifests-exclusion/instances/git-creds.yaml
+    ```
+
+
 ---
 
 ## 2. Implémentation A : Ségrégation par `AppProject` (RBAC ArgoCD)
