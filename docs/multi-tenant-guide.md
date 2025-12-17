@@ -23,6 +23,8 @@ Comme il s'agit d'un dépôt privé/interne, vous devez configurer les identifia
 **Procédure (À faire une fois pour les 3 instances)** :
 1.  Editez le fichier `manifests-exclusion/instances/git-creds.yaml`.
 2.  Remplacez `votre-username` et `votre-password` par vos identifiants Git.
+    *   **Note pour les Tokens** : Si vous utilisez un Token d'accès (PAT), mettez le token dans le champ `password`. Le champ `username` peut souvent être n'importe quoi (ou votre nom d'utilisateur associé).
+    *   **Note pour SSL/TLS** : Le fichier inclut désormais le certificat CA de `bastion.skyr.dca.scc`. Vous n'avez pas besoin de toucher à `tlsClientConfig.caData` sauf si le certificat du serveur change.
 3.  Appliquez le secret :
     ```bash
     oc apply -f manifests-exclusion/instances/git-creds.yaml
