@@ -123,30 +123,35 @@ On définit également un `installationID` unique pour garantir l'isolation des 
 On modifie la ConfigMap via `extraConfig` dans l'opérateur. Notez l'exclusion explicite du RBAC et des Quotas.
 ```yaml
 # manifests-exclusion/instances/argocd-instances.yaml (Extrait)
-apiVersion: argoproj.io/v1alpha1
+apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
 metadata:
   name: argocd-dev
   namespace: argocd-dev
 spec:
+  sso:
+    provider: dex
+    dex:
+      config: |
+        logger:
+          level: debug
+        connectors:
+        - type: ldap
+          id: freeipa
+          config:
+            host: idm.skyr.dca.scc:636
+            insecureSkipVerify: true # Bypasse le TLS pour la démo
+            # ... bindDN, search parameters ...
   extraConfig:
     argocd-cm: |
-      installationID: "argocd-dev"            # Isolation du cluster cache
-      application.resourceTrackingMethod: annotation # Tracking sans label collision
+      installationID: "argocd-dev"
+      application.resourceTrackingMethod: annotation
       
-      # INCLUSIONS : Ce contrôleur ne voit QUE les apps
       resource.inclusions: |
         - apiGroups: ["apps"]
           kinds: ["Deployment","StatefulSet"]
         - apiGroups: [""]
-          kinds: ["Service","ConfigMap"]
-      
-      # EXCLUSIONS : Ceinture de sécurité supplémentaire
-      resource.exclusions: |
-        - apiGroups: [""]
-          kinds: ["ResourceQuota"]
-        - apiGroups: ["rbac.authorization.k8s.io"]
-          kinds: ["Role","RoleBinding"]
+          kinds: ["Service","ConfigMap","Secret"]
 ```
 
 ### B.3 Guide d'Installation (Variante Exclusions)
@@ -187,8 +192,8 @@ spec:
 ### 4.2 Intégration LDAP/Dex (`argocd-instances.yaml`)
 | Paramètre | Description |
 | :--- | :--- |
-| `spec.dex.config` | Configuration du connecteur LDAP. Définit comment Dex interroge FreeIPA. |
-| `rootCAData` | Certificat CA de FreeIPA (Base64) pour sécuriser la connexion LDAPS (Port 636). |
+| `spec.sso.dex.config` | **CRITIQUE (v1beta1)** : Emplacement de la config Dex. |
+| `insecureSkipVerify: true` | Permet d'ignorer la validation du certificat FreeIPA si le trust nesting n'est pas complet. |
 | `userSearch` / `groupSearch` | Mappage des attributs FreeIPA (`uid` pour l'utilisateur, `cn` pour les groupes). |
 
 ### 4.3 Configuration OIDC (`oidc.config`)
