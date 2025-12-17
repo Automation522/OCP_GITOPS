@@ -13,11 +13,6 @@ spec:
     server: https://kubernetes.default.svc
     namespace: testappli
   syncPolicy:
-    managedNamespaceMetadata:
-      labels:
-        argocd.argoproj.io/managed-by: argocd-rbac
-    syncOptions:
-      - CreateNamespace=true
     automated:
       prune: true
       selfHeal: true
