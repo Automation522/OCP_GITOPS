@@ -1,87 +1,121 @@
-# Guide de Déploiement Multi-Tenant ArgoCD
+# Guide Complet de Déploiement Multi-Tenant ArgoCD
 
-Ce document présente deux stratégies pour implémenter une architecture Multi-Tenant avec 3 instances ArgoCD distinctes (`argocd-rbac`, `argocd-dev`, `argocd-gov`) gérant un namespace cible commun `testappli`.
+Ce document détaille l'implémentation d'une architecture Multi-Tenant sécurisée utilisant 3 instances ArgoCD distinctes.
 
-## Objectif
+## 1. Concepts Clés et Architecture
 
-Séparer les responsabilités :
-1.  **argocd-rbac** : Gestion du Namespace (metadata) et des accès RBAC.
-2.  **argocd-dev** : Gestion des applications (Workloads, Services, etc.).
-3.  **argocd-gov** : Gestion de la gouvernance (ResourceQuota, LimitRange).
+### Pourquoi 3 instances ArgoCD ?
+L'objectif est d'appliquer le principe de moindre privilège et de séparation des responsabilités (SoD - Separation of Duties) au niveau le plus fondamental : le contrôleur de déploiement lui-même.
+
+| Instance | Rôle | Responsabilités (Périmètre) | Pourquoi ? |
+| :--- | :--- | :--- | :--- |
+| **argocd-rbac** | **Admin / Sécurité** | Gestion du Namespace cible (création, labels) et des objets RBAC (Roles, Bindings). | Empêche les développeurs de s'auto-attribuer des droits élevés. Seul cet ArgoCD peut toucher à la sécurité. |
+| **argocd-gov** | **Gouvernance** | Gestion des Quotas (CPU/RAM/Storage) et LimitRanges. | Garantit que les équipes applicatives ne peuvent pas modifier ou supprimer leurs propres limites de ressources. |
+| **argocd-dev** | **Applicatif** | Gestion des Workloads (Deployments, StatefulSets), Services, ConfigMaps, Secrets. | Permet aux développeurs de déployer leurs apps sans risque d'impacter la sécurité ou les quotas du namespace. |
+
+### Le concept de "Managed-By"
+Un Namespace Kubernetes ne peut avoir qu'un seul label `argocd.argoproj.io/managed-by`. Cela signifie qu'une seule instance ArgoCD est "propriétaire" du namespace au sens de l'opérateur.
+*   **Notre choix** : `argocd-rbac` sera le propriétaire.
+*   **Conséquence** : Les autres instances (`dev` et `gov`) n'ont PAS de droits automatiques sur ce namespace. Nous devons leur donner des droits explicites via des RoleBindings Kubernetes créés par `argocd-rbac`.
 
 ---
 
-## Stratégie 1 : Isolation par AppProjects (Recommandée)
+## 2. Déroulement du Déploiement (Pas à Pas)
 
-Cette méthode utilise les `AppProjects` ArgoCD pour restreindre les types de ressources autorisés (`clusterResourceWhitelist` / `namespaceResourceWhitelist`).
+### Étape 0 : Préparation de l'environnement
+Nous commençons par déployer les 3 instances ArgoCD dans leurs propres namespaces d'administration.
 
-### Localisation
-Les fichiers se trouvent dans le dossier : `manifests-app-proj/`
+*   **Action** : Création des namespaces `argocd-rbac`, `argocd-dev`, `argocd-gov`.
+*   **Action** : Déploiement des CR `ArgoCD`.
+*   **Fichier** : `manifests/instances/` (ou `manifests-exclusion/instances/`).
 
-### Configuration
-1.  **Projets** : 3 AppProjects (`project-rbac`, `project-dev`, `project-gov`) définis dans `manifests-app-proj/testappli/argocd-config/projects.yaml`.
-2.  **Restrictions** : Chaque projet whitelist uniquement les GVK (Group/Version/Kind) nécessaires.
+### Étape 1 : Le Socle de Sécurité (Role de argocd-rbac)
+C'est la première brique à poser.
+`argocd-rbac` va créer le namespace cible `testappli` et y installer les règles du jeu.
 
-### Déploiement
+1.  **Création du Namespace** : `argocd-rbac` crée `testappli` et pose le label `managed-by: argocd-rbac`.
+2.  **Création du RBAC interne** : Il déploie des `Role` et `RoleBinding` dans `testappli`.
+    *   *Exemple* : Il crée un Role `argocd-dev-apps` qui dit "Autorisé à toucher aux Deployments et Services".
+    *   *Binding* : Il lie ce Role au ServiceAccount de l'instance `argocd-dev`.
+    *   *Résultat* : `argocd-dev` a maintenant le droit de déployer des apps, mais toujours pas de toucher aux quotas.
+
+### Étape 2 : La Gouvernance (Role de argocd-gov)
+Une fois le socle posé, `argocd-gov` entre en jeu.
+Il déploie les objets `ResourceQuota` et `LimitRange`.
+*   Comme `argocd-gov` n'est pas le propriétaire du namespace, il utilise les droits (RoleBinding) que `argocd-rbac` lui a préparés à l'étape 1.
+
+### Étape 3 : L'Application (Role de argocd-dev)
+Enfin, les développeurs peuvent déployer.
+`argocd-dev` déploie le MySQL et le Service.
+*   Si le déploiement demande 100 CPU, le `ResourceQuota` posé par `argocd-gov` bloquera la création du Pod. `argocd-dev` ne pourra rien y faire (car il n'a pas les droits pour modifier le Quota).
+
+---
+
+## 3. Deux Stratégies de Mise en Œuvre
+
+Nous proposons deux variantes techniques pour implémenter cette architecture.
+
+### Stratégie A : Isolation par AppProjects (Whitelist)
+*C'est la méthode standard ArgoCD.*
+
+*   **Mécanisme** : On définit un objet `AppProject` pour chaque instance.
+*   **Configuration** : Dans l'`AppProject`, on remplit le champ `namespaceResourceWhitelist`.
+    *   Projet Dev : Whitelist `Deployment`, `Service`, etc.
+    *   Projet Gov : Whitelist `ResourceQuota`.
+*   **Avantage** : Centralisé et visible dans l'UI ArgoCD. Si on essaie de sync un objet interdit, l'UI affiche une erreur de permission immédiate.
+*   **Dossier** : `manifests-app-proj/`
+
+### Stratégie B : Isolation par Exclusions (ConfigMap)
+*C'est une méthode "Hardened" configurée au niveau de l'instance.*
+
+*   **Mécanisme** : On configure le contrôleur ArgoCD lui-même (via sa ConfigMap `argocd-cm`) pour qu'il ignore totalement certains types de ressources.
+*   **Configuration** :
+    *   Instance Dev : `resource.exclusions: [ResourceQuota, LimitRange, Role, ...]`
+*   **Avantage** : Sécurité absolue au niveau du binaire. Même si un admin ArgoCD essaie de créer un Quota, le contrôleur l'ignorera complètement.
+*   **Détail technique** : On utilise aussi `installationID` pour que plusieurs ArgoCD puissent cohabiter sans se marcher sur les pieds (évite qu'ArgoCD A supprime les ressources de ArgoCD B).
+*   **Dossier** : `manifests-exclusion/`
+
+---
+
+## 4. Instructions de Déploiement
+
+Choisissez **une seule** des deux stratégies ci-dessous.
+
+### Option A : Déploiement via AppProjects
+
 ```bash
-# 1. Déploiement des instances et namespaces
+# 1. Installer les instances
 oc apply -f manifests-app-proj/instances/namespaces.yaml
 oc apply -f manifests-app-proj/instances/argocd-instances.yaml
 
-# 2. Configuration (Projets + Applications)
+# 2. Configurer les autorisations (Projets et Apps)
 oc apply -f manifests-app-proj/testappli/argocd-config/projects.yaml
 oc apply -f manifests-app-proj/testappli/argocd-config/applications.yaml
 ```
 
----
+### Option B : Déploiement via Exclusions
 
-## Stratégie 2 : Isolation par Exclusions (Variante ConfigMap)
-
-Cette méthode utilise la configuration `resource.inclusions` et `resource.exclusions` directement dans la ConfigMap (`argocd-cm`) de chaque instance ArgoCD. Elle permet d'utiliser le projet `default` tout en sécurisant les périmètres.
-
-### Localisation
-Les fichiers se trouvent dans le dossier : `manifests-exclusion/`
-
-### Configuration
-1.  **Instances** : Les CR `ArgoCD` (`manifests-exclusion/instances/argocd-instances.yaml`) contiennent une `extraConfig` définissant :
-    *   `installationID` : Pour éviter les collisions.
-    *   `resource.exclusions/inclusions` : Pour filtrer les ressources.
-2.  **Projets** : Utilisation du projet `default`.
-
-### Détail des filtres
-*   **argocd-dev** : Exclut explicitement `ResourceQuota`, `LimitRange`, et `RBAC`. Inclus `apps`, `Service`, etc.
-*   **argocd-gov** : Inclus uniquement `ResourceQuota` et `LimitRange`.
-*   **argocd-rbac** : Inclus uniquement `Role`, `RoleBinding`.
-
-### Déploiement
 ```bash
-# 1. Déploiement des instances (avec configuration Exclusions)
+# 1. Installer les instances (Configurées avec exclusions)
 oc apply -f manifests-exclusion/instances/namespaces.yaml
 oc apply -f manifests-exclusion/instances/argocd-instances.yaml
 
-# 2. Déploiement des Applications
+# 2. Déployer les Applications
 oc apply -f manifests-exclusion/testappli/argocd-config/applications.yaml
 ```
 
 ---
 
-## Vérification Commune
+## 5. Vérification
 
-Quel que soit le mode choisi, le résultat attendu est :
+Pour valider que la séparation fonctionne :
 
-1.  Le namespace `testappli` existe et porte le label `argocd.argoproj.io/managed-by: argocd-rbac`.
-2.  Les pods MySQL (`argocd-dev`) sont en cours d'exécution.
-3.  Les Quotas (`argocd-gov`) sont appliqués.
-4.  Les accès croisés sont interdits (par RBAC Kubernetes et par la configuration ArgoCD).
+1.  **Vérifier le Namespace** :
+    ```bash
+    oc describe ns testappli
+    # Doit montrer le label: argocd.argoproj.io/managed-by=argocd-rbac
+    ```
 
-### Commandes de vérification
-```bash
-# Vérifier le propriétaire du namespace
-oc get ns testappli --show-labels
-
-# Vérifier les workloads (Dev)
-oc -n testappli get sts,svc
-
-# Vérifier la gouvernance (Gov)
-oc -n testappli get quota
-```
+2.  **Test d'intrusion (Simulation)** :
+    Essayez d'ajouter un `ResourceQuota` dans le dépôt Git utilisé par `argocd-dev`.
+    *   *Résultat attendu* : ArgoCD refusera de le synchroniser OU l'ignorera, car il n'a pas les droits/inclusions nécessaires.
