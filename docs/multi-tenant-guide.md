@@ -49,6 +49,13 @@ Chaque instance ArgoCD (`argocd-rbac`, `argocd-dev`, `argocd-gov`) dispose de sa
 1.  **Secret** `freeipa-ldap-secret` : Contient le mot de passe du compte de service `uid=openshift`.
 2.  **ConfigMap** `argocd-tls-certs-cm` : Contient le certificat CA public de FreeIPA.
 
+Ces ressources sont définies dans le fichier `manifests-exclusion/instances/freeipa-resources.yaml`.
+
+**Installation :**
+```bash
+oc apply -f manifests-exclusion/instances/freeipa-resources.yaml
+```
+
 **Extrait de Configuration (ArgoCD CR) :**
 ```yaml
 spec:
