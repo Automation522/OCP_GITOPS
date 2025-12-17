@@ -13,90 +13,34 @@ L'architecture repose sur l'instanciation de **3 contrôleurs ArgoCD indépendan
 | **argocd-gov** | **Gouvernance & Quotas** | `v1/ResourceQuota`, `v1/LimitRange` | Garant de la conformité et de l'allocation des ressources. |
 | **argocd-dev** | **Workloads Applicatifs** | `apps/*` (Deployments, StatefulSets), `v1/Service`, `route.openshift.io/*` | Déploiement logiciel standard. |
 
-## 1.1 Prérequis de Connexion Git
+## 1. Prérequis et Déploiement Initial
 
-Les 3 instances ArgoCD doivent se connecter à votre dépôt Git (`https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git`).
-Comme il s'agit d'un dépôt privé/interne, vous devez configurer les identifiants via un Secret Kubernetes dans chaque namespace.
+L'installation de l'architecture multi-tenant nécessite le déploiement de plusieurs ressources de base avant la configuration des instances ArgoCD.
 
-**Fichier fourni** : `manifests-exclusion/instances/git-creds.yaml`
+### 1.1 Connexion Git et Authentification (Secrets)
 
-**Procédure (À faire une fois pour les 3 instances)** :
-1.  Editez le fichier `manifests-exclusion/instances/git-creds.yaml`.
-2.  Remplacez `votre-username` et `votre-password` par vos identifiants Git.
-    *   **Note pour les Tokens** : Si vous utilisez un Token d'accès (PAT), mettez le token dans le champ `password`. Le champ `username` peut souvent être n'importe quoi (ou votre nom d'utilisateur associé).
-    *   **Note pour SSL/TLS** : Le fichier inclut désormais le certificat CA de `bastion.skyr.dca.scc`. Vous n'avez pas besoin de toucher à `tlsClientConfig.caData` sauf si le certificat du serveur change.
-3.  Appliquez le secret :
+Il est CRITIQUE d'appliquer les ressources de connexion Git et d'intégration FreeIPA dans tous les namespaces ArgoCD.
+
+**Fichiers à configurer et déployer :**
+
+1.  **Gestion des identifiants Git** : `manifests-exclusion/instances/git-creds.yaml`
+    *   Ce fichier définit les secrets de type `repository` pour que les instances puissent fetcher le code.
     ```bash
     oc apply -f manifests-exclusion/instances/git-creds.yaml
     ```
 
+2.  **Ressources FreeIPA (LDAP/TLS)** : `manifests-exclusion/instances/freeipa-resources.yaml`
+    *   Contient le mot de passe de liaison LDAP (`freeipa-ldap-secret`) et le certificat CA de FreeIPA (`argocd-tls-certs-cm`).
+    ```bash
+    oc apply -f manifests-exclusion/instances/freeipa-resources.yaml
+    ```
 
----
+### 1.2 Création des Namespaces et Quotas
 
-## 1.2 Authentification Centralisée (FreeIPA)
-
-Pour garantir une gestion unifiée des accès, les 3 instances ArgoCD sont connectées au serveur FreeIPA de l'entreprise.
-
-### Architecture d'Authentification
-*   **Protocole** : LDAP over SSL (LDAPS) sur le port 636.
-*   **Broker** : Dex (intégré à ArgoCD) agit comme intermédiaire OIDC.
-*   **Certificats** : Le CA de FreeIPA est monté dans chaque instance pour valider la connexion sécurisée.
-
-### Configuration Commune
-Chaque instance ArgoCD (`argocd-rbac`, `argocd-dev`, `argocd-gov`) dispose de sa propre configuration Dex dans le champ `spec.dex` de sa ressource Custom `ArgoCD`.
-
-**Ressources déployées par namespace :**
-1.  **Secret** `freeipa-ldap-secret` : Contient le mot de passe du compte de service `uid=openshift`.
-2.  **ConfigMap** `argocd-tls-certs-cm` : Contient le certificat CA public de FreeIPA.
-
-Ces ressources sont définies dans le fichier `manifests-exclusion/instances/freeipa-resources.yaml`.
-
-**Installation :**
+Avant de déployer les instances, assurez-vous que les namespaces de gestion existent.
 ```bash
-oc apply -f manifests-exclusion/instances/freeipa-resources.yaml
+oc apply -f manifests-exclusion/instances/namespaces.yaml
 ```
-
-**Extrait de Configuration (ArgoCD CR) :**
-```yaml
-spec:
-  dex:
-    config: |
-      connectors:
-      - type: ldap
-        id: freeipa
-        name: FreeIPA
-        config:
-          host: idm.skyr.dca.scc:636
-          insecureNoSSL: false
-          rootCAData: LS0tLS... # Certificat CA encodé en Base64
-          bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-          bindPW: Redhat2025!
-          userSearch:
-            baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-            filter: "(objectClass=person)"
-            username: uid
-            idAttr: uid
-            emailAttr: mail
-            nameAttr: cn
-          groupSearch:
-            baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc
-            filter: "(objectClass=groupOfNames)"
-            userMatchers:
-            - userAttr: dn
-              groupAttr: member
-            nameAttr: cn
-  extraConfig:
-    argocd-cm: |
-      oidc.config: |
-        name: FreeIPA
-        issuer: https://<argocd-server-host>/api/dex
-        clientID: argo-cd
-        clientSecret: $oidc.dex.clientSecret
-        requestedScopes: ["openid", "profile", "email", "groups"]
-        rootCAData: LS0tLS... # Certificat CA de la Route OpenShift (pour que ArgoCD truste Dex)
-```
-
-> **Note** : Pour plus de détails sur le dépannage de l'authentification, référez-vous au guide dédié : [Configuration de l'authentification FreeIPA](freeipa-authentication.md).
 
 ---
 
@@ -231,7 +175,43 @@ spec:
 
 ---
 
-## 4. Comparatif Technique
+## 4. Description Détaillée des Paramètres
+
+### 4.1 Configuration Git (`git-creds.yaml`)
+| Paramètre | Description |
+| :--- | :--- |
+| `url` | URL HTTPS du dépôt Git. |
+| `username` / `password` | Identifiants pour l'authentification Git. |
+| `insecure: "true"` | **Indispensable en DMZ/Demo** : Permet d'ignorer la vérification SSL si le certificat du bastion n'est pas reconnu par le pod. |
+
+### 4.2 Intégration LDAP/Dex (`argocd-instances.yaml`)
+| Paramètre | Description |
+| :--- | :--- |
+| `spec.dex.config` | Configuration du connecteur LDAP. Définit comment Dex interroge FreeIPA. |
+| `rootCAData` | Certificat CA de FreeIPA (Base64) pour sécuriser la connexion LDAPS (Port 636). |
+| `userSearch` / `groupSearch` | Mappage des attributs FreeIPA (`uid` pour l'utilisateur, `cn` pour les groupes). |
+
+### 4.3 Configuration OIDC (`oidc.config`)
+| Paramètre | Description |
+| :--- | :--- |
+| `issuer` | URL externe de l'instance ArgoCD (doit correspondre à la route). |
+| `rootCAData` | **CRITIQUE** : Certificat de la route OpenShift. Sans cela, ArgoCD Server rejette le jeton de Dex car il ne truste pas le certificat SSL de la route. |
+
+### 4.4 Pilotage des Namespaces (`namespaceManagement`)
+| Paramètre | Description |
+| :--- | :--- |
+| `spec.namespaceManagement` | Remplace l'ancien champ `namespaces`. Liste les namespaces que cette instance ArgoCD a le droit de "voir" et gérer. |
+| `allowManagedBy: true` | Autorise explicitement l'opérateur à configurer le RBAC système pour ce namespace. |
+
+### 4.5 Isolation des Contrôleurs (`argocd-cm`)
+| Paramètre | Description |
+| :--- | :--- |
+| `installationID` | Identifiant unique pour chaque instance. Empêche deux instances de se "voler" la gestion d'une ressource (Sync Collision). |
+| `resource.exclusions` / `resource.inclusions` | Liste des GVK (Group/Version/Kind) que le contrôleur doit **ignorer totally** ou **inclure exclusivement**. C'est le cœur de notre SoD. |
+
+---
+
+## 5. Comparatif Technique
 
 | Caractéristique | Implémentation A (AppProject) | Implémentation B (Exclusions) |
 | :--- | :--- | :--- |
@@ -243,7 +223,7 @@ spec:
 
 ---
 
-## 5. Deep Dive Technique
+## 6. Analyse Technique Approfondie
 
 ### A. L'`installationID` : Pourquoi est-ce indispensable ?
 Quand plusieurs instances ArgoCD tournent sur le même cluster, elles risquent d'entrer en conflit sur deux points :
