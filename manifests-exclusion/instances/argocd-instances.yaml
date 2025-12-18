@@ -4,6 +4,8 @@ metadata:
   name: argocd-rbac
   namespace: argocd-rbac
 spec:
+  sourceNamespaces:
+  - testappli
   tls:
     ca:
       configMapName: argocd-tls-certs-cm
@@ -50,6 +52,8 @@ metadata:
   name: argocd-dev
   namespace: argocd-dev
 spec:
+  sourceNamespaces:
+  - testappli
   tls:
     ca:
       configMapName: argocd-tls-certs-cm
@@ -96,6 +100,8 @@ metadata:
   name: argocd-gov
   namespace: argocd-gov
 spec:
+  sourceNamespaces:
+  - testappli
   tls:
     ca:
       configMapName: argocd-tls-certs-cm
