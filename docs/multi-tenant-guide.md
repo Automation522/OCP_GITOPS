@@ -106,7 +106,7 @@ spec:
 
 ---
 
-## 3. Implémentation B : Ségrégation par Exclusions (Filtrage Contrôleur)
+## 3. Implémentation Réelle de la Démo (Exclusions côté contrôleur + 3 instances)
 
 ### Principe Technique
 Cette méthode utilise le **Filtrage Natif du Contrôleur**. La restriction est appliquée au niveau du binaire `argocd-application-controller` via des arguments de démarrage injectés par ConfigMap.
@@ -114,8 +114,16 @@ Cette méthode utilise le **Filtrage Natif du Contrôleur**. La restriction est 
 *   **Localisation** : `manifests-exclusion/`
 
 ### B.1 Architecture Logique
-Ici, les `AppProjects` ne portent aucune restriction (utilisation du projet `default`). C'est l'instance ArgoCD elle-même qui est "aveugle" aux ressources interdites.
-On définit également un `installationID` unique pour garantir l'isolation des caches Redis et éviter les conflits de propriété entre contrôleurs (Split Brain).
+Dans la démo, nous combinons deux leviers:
+- 3 instances ArgoCD distinctes (argocd-rbac, argocd-gov, argocd-dev)
+- Des AppProjects minimalistes pour expliciter les périmètres (inclusions/exclusions)
+
+Répartition:
+- `argocd-rbac` déploie le namespace et le RBAC (Role/RoleBinding) via l'application `app-testappli-rbac` (chemin `manifests-exclusion/testappli/rbac-access`).
+- `argocd-gov` déploie uniquement `ResourceQuota` et `LimitRange` via `app-testappli-governance` (chemin `manifests-exclusion/testappli/gov`).
+- `argocd-dev` déploie les workloads applicatifs via `app-testappli-apps` (chemin `manifests-exclusion/testappli/apps/mysql`).
+
+Les AppProjects appliquent une whitelist stricte des GVK autorisés, assurant une ségrégation claire des responsabilités.
 
 ### B.2 Exemples de Configuration
 
@@ -154,7 +162,7 @@ spec:
           kinds: ["Service","ConfigMap","Secret"]
 ```
 
-### B.3 Guide d'Installation (Variante Exclusions)
+### B.3 Guide d'Installation (Démo)
 
 **Prérequis** : Opérateur OpenShift GitOps installé.
 
@@ -166,16 +174,23 @@ spec:
     # Attendre le redémarrage des statefulset argocd-application-controller pour prise en compte de la CM
     ```
 
-2.  **Déploiement des Applications**
-    On déploie les applications qui utiliseront le projet `default` (mais seront filtrées par le contrôleur).
+2.  **Déploiement des Projets + Applications**
+  On applique les AppProjects et les 3 Applications correspondantes (une par instance):
     ```bash
-    oc apply -f manifests-exclusion/testappli/argocd-config/applications.yaml
+  oc apply -f manifests-exclusion/testappli/argocd-config/projects.yaml
+  oc apply -f manifests-exclusion/testappli/argocd-config/applications.yaml
     ```
 
 3.  **Vérification**
     ```bash
-    # Vérifier que les exclusions fonctionnent (Test de robustesse)
-    # Tentez d'ajouter un ResourceQuota dans le repo de argocd-dev -> Il sera ignoré.
+    # Vérifier la répartition des responsabilités
+    oc get application -n argocd-rbac app-testappli-rbac -o wide
+    oc get application -n argocd-gov app-testappli-governance -o wide
+    oc get application -n argocd-dev app-testappli-apps -o wide
+
+    # Test de robustesse :
+    # - Ajouter un ResourceQuota dans le dossier apps/mysql -> Devra être refusé par AppProject dev-testappli
+    # - Ajouter un Deployment dans le dossier gov -> Devra être refusé par AppProject gov-testappli
     ```
 
 ---
