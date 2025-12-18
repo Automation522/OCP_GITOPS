@@ -181,6 +181,38 @@ spec:
   oc apply -f manifests-exclusion/testappli/argocd-config/applications.yaml
     ```
 
+### B.4 AppProject "par défaut" minimal (deny-all)
+
+But: établir un garde‑fou global par instance ArgoCD. Toute Application qui resterait sur le projet `default` sera bloquée (deny-by-default) et devra être rattachée explicitement à un projet dédié (`rbac-testappli`, `gov-testappli`, `dev-testappli`).
+
+Avantages:
+- Sécurité par défaut: empêche les syncs accidentels hors périmètre.
+- Erreurs explicites: l'API ArgoCD renvoie "PermissionDenied" si une ressource/destination n'est pas autorisée.
+- Hygiène: force l’usage d’un AppProject métier par équipe.
+
+Manifeste (appliqué dans chaque namespace d’instance):
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd-dev   # idem pour argocd-gov et argocd-rbac
+spec:
+  description: "Deny-all baseline; use a specific project."
+  sourceRepos: []
+  destinations: []
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist: []
+```
+
+Application:
+```bash
+oc apply -f manifests-exclusion/instances/appprojects-default.yaml
+oc get appproject default -n argocd-dev
+oc get appproject default -n argocd-gov
+oc get appproject default -n argocd-rbac
+```
+
 3.  **Vérification**
     ```bash
     # Vérifier la répartition des responsabilités
