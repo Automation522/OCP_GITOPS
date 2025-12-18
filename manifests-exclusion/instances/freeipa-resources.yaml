@@ -12,9 +12,40 @@ kind: ConfigMap
 metadata:
   name: argocd-tls-certs-cm
   namespace: argocd-rbac
+  annotations:
+    config.openshift.io/inject-trusted-cabundle: "true"
   labels:
     app.kubernetes.io/part-of: argocd
 data:
+  ca-bundle.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIExzCCAy+gAwIBAgIBDTANBgkqhkiG9w0BAQsFADA3MRUwEwYDVQQKDAxTS1lS
+    LkRDQS5TQ0MxHjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAeFw0yNTEw
+    MTkyMDUxNDRaFw0yNzEwMjAyMDUxNDRaMD4xFTATBgNVBAoMDFNLWVIuRENBLlND
+    QzElMCMGA1UEAwwcKi5hcHBzLm9jcDQtdXBpLnNreXIuZGNhLnNjYzCCASIwDQYJ
+    KoZIhvcNAQEBBQADggEPADCCAQoCggEBAN/GGk7BE9V8z2Rd9JiK4J4O8yeJadh5
+    phYsx9wECSenk6bGxRV0TPb1g80j+1xsT9jOFuKx+Ce6WU1MErYnWWgTNBj6QhdD
+    YMkq/n5qNNXRsIsNkhNMqzKJsvTGPoS+v4Tam6s9m7iu0zKzjfE4wCeBeLMjyiVq
+    8VRUTAnM6ln23mS2HMQV+qYvmFemxPszDq/s3fyUrSmJjtKJA0+aMHvS1ayl0qXO
+    OLZ9R46tEsI6S1flIFdOiMT+t+XeSkNw4GibvQkKvXgqw4Nsxm5gyI3iU76Ne/dz
+    5tBmGDTjBZ5EWv6l1OPGMbHoNyC6r7Xl5Rybmq/E0pdlLCIXoAwrs10CAwEAAaOC
+    AVUwggFRMB8GA1UdIwQYMBaAFGCOFOHltbIETp/9G+Ckx3z/nE/CMD4GCCsGAQUF
+    BwEBBDIwMDAuBggrBgEFBQcwAYYiaHR0cDovL2lwYS1jYS5za3lyLmRjYS5zY2Mv
+    Y2Evb2NzcDAOBgNVHQ8BAf8EBAMCBPAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsG
+    AQUFBwMCMHcGA1UdHwRwMG4wbKA0oDKGMGh0dHA6Ly9pcGEtY2Euc2t5ci5kY2Eu
+    c2NjL2lwYS9jcmwvTWFzdGVyQ1JMLmJpbqI0pDIwMDEOMAwGA1UECgwFaXBhY2Ex
+    HjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAdBgNVHQ4EFgQULcywjxJb
+    /rhJAu2z8HlRLIrokB8wJwYDVR0RBCAwHoIcKi5hcHBzLm9jcDQtdXBpLnNreXIu
+    ZGNhLnNjYzANBgkqhkiG9w0BAQsFAAOCAYEAhagv04XuRmOguu+8WidccNpBgPM1
+    c9oHgBMvAdx0m/j5cjcPK8Leqw7K5LSKcP4mZyKfEcJ1STempCB78NxuVR+Yam6j
+    HUtDeGEGLUQKqsUDn+STmZkWeUOB/K2P68di+p22xOq8P/aUluELmZBiXVitr2sq
+    fvEa+1M10n2/X159YUY6IAT2bv8Nkz+5toOzvtx6KYQ0vcaHMtMPaOAk3AzCXb3W
+    LYhkDZUFgncCNZN+leeuMMVoA20T7C45zJdjOEX3r8L0rKNGmwq8OWleVF5jljHh
+    Xg8PuNqgs5C3g8R/Ldi6bpetD9myVJY2bMLm6Y/qNRFAeSm1b/iaN32pVGF8KAyT
+    Li5quFtwt3Fn3xx2sbz+bBmL4pjmiaHmAdkpt8eluE7vG+etoWGvyADbaJmLqNb8
+    9PRi/MPmDFwA5TqX7HRolS82X2IFceNuPSMcw/aWnaYnnihpXvX1jEhQjDoAYBxV
+    6k9ANQK1cybCkigEGoNj8oJzpyLgR+xIBNnk
+    -----END CERTIFICATE-----
   idm.skyr.dca.scc: |
     -----BEGIN CERTIFICATE-----
     MIIEjjCCAvagAwIBAgIBATANBgkqhkiG9w0BAQsFADA3MRUwEwYDVQQKDAxTS1lS
@@ -58,9 +89,40 @@ kind: ConfigMap
 metadata:
   name: argocd-tls-certs-cm
   namespace: argocd-dev
+  annotations:
+    config.openshift.io/inject-trusted-cabundle: "true"
   labels:
     app.kubernetes.io/part-of: argocd
 data:
+  ca-bundle.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIExzCCAy+gAwIBAgIBDTANBgkqhkiG9w0BAQsFADA3MRUwEwYDVQQKDAxTS1lS
+    LkRDQS5TQ0MxHjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAeFw0yNTEw
+    MTkyMDUxNDRaFw0yNzEwMjAyMDUxNDRaMD4xFTATBgNVBAoMDFNLWVIuRENBLlND
+    QzElMCMGA1UEAwwcKi5hcHBzLm9jcDQtdXBpLnNreXIuZGNhLnNjYzCCASIwDQYJ
+    KoZIhvcNAQEBBQADggEPADCCAQoCggEBAN/GGk7BE9V8z2Rd9JiK4J4O8yeJadh5
+    phYsx9wECSenk6bGxRV0TPb1g80j+1xsT9jOFuKx+Ce6WU1MErYnWWgTNBj6QhdD
+    YMkq/n5qNNXRsIsNkhNMqzKJsvTGPoS+v4Tam6s9m7iu0zKzjfE4wCeBeLMjyiVq
+    8VRUTAnM6ln23mS2HMQV+qYvmFemxPszDq/s3fyUrSmJjtKJA0+aMHvS1ayl0qXO
+    OLZ9R46tEsI6S1flIFdOiMT+t+XeSkNw4GibvQkKvXgqw4Nsxm5gyI3iU76Ne/dz
+    5tBmGDTjBZ5EWv6l1OPGMbHoNyC6r7Xl5Rybmq/E0pdlLCIXoAwrs10CAwEAAaOC
+    AVUwggFRMB8GA1UdIwQYMBaAFGCOFOHltbIETp/9G+Ckx3z/nE/CMD4GCCsGAQUF
+    BwEBBDIwMDAuBggrBgEFBQcwAYYiaHR0cDovL2lwYS1jYS5za3lyLmRjYS5zY2Mv
+    Y2Evb2NzcDAOBgNVHQ8BAf8EBAMCBPAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsG
+    AQUFBwMCMHcGA1UdHwRwMG4wbKA0oDKGMGh0dHA6Ly9pcGEtY2Euc2t5ci5kY2Eu
+    c2NjL2lwYS9jcmwvTWFzdGVyQ1JMLmJpbqI0pDIwMDEOMAwGA1UECgwFaXBhY2Ex
+    HjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAdBgNVHQ4EFgQULcywjxJb
+    /rhJAu2z8HlRLIrokB8wJwYDVR0RBCAwHoIcKi5hcHBzLm9jcDQtdXBpLnNreXIu
+    ZGNhLnNjYzANBgkqhkiG9w0BAQsFAAOCAYEAhagv04XuRmOguu+8WidccNpBgPM1
+    c9oHgBMvAdx0m/j5cjcPK8Leqw7K5LSKcP4mZyKfEcJ1STempCB78NxuVR+Yam6j
+    HUtDeGEGLUQKqsUDn+STmZkWeUOB/K2P68di+p22xOq8P/aUluELmZBiXVitr2sq
+    fvEa+1M10n2/X159YUY6IAT2bv8Nkz+5toOzvtx6KYQ0vcaHMtMPaOAk3AzCXb3W
+    LYhkDZUFgncCNZN+leeuMMVoA20T7C45zJdjOEX3r8L0rKNGmwq8OWleVF5jljHh
+    Xg8PuNqgs5C3g8R/Ldi6bpetD9myVJY2bMLm6Y/qNRFAeSm1b/iaN32pVGF8KAyT
+    Li5quFtwt3Fn3xx2sbz+bBmL4pjmiaHmAdkpt8eluE7vG+etoWGvyADbaJmLqNb8
+    9PRi/MPmDFwA5TqX7HRolS82X2IFceNuPSMcw/aWnaYnnihpXvX1jEhQjDoAYBxV
+    6k9ANQK1cybCkigEGoNj8oJzpyLgR+xIBNnk
+    -----END CERTIFICATE-----
   idm.skyr.dca.scc: |
     -----BEGIN CERTIFICATE-----
     MIIEjjCCAvagAwIBAgIBATANBgkqhkiG9w0BAQsFADA3MRUwEwYDVQQKDAxTS1lS
@@ -104,9 +166,40 @@ kind: ConfigMap
 metadata:
   name: argocd-tls-certs-cm
   namespace: argocd-gov
+  annotations:
+    config.openshift.io/inject-trusted-cabundle: "true"
   labels:
     app.kubernetes.io/part-of: argocd
 data:
+  ca-bundle.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIExzCCAy+gAwIBAgIBDTANBgkqhkiG9w0BAQsFADA3MRUwEwYDVQQKDAxTS1lS
+    LkRDQS5TQ0MxHjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAeFw0yNTEw
+    MTkyMDUxNDRaFw0yNzEwMjAyMDUxNDRaMD4xFTATBgNVBAoMDFNLWVIuRENBLlND
+    QzElMCMGA1UEAwwcKi5hcHBzLm9jcDQtdXBpLnNreXIuZGNhLnNjYzCCASIwDQYJ
+    KoZIhvcNAQEBBQADggEPADCCAQoCggEBAN/GGk7BE9V8z2Rd9JiK4J4O8yeJadh5
+    phYsx9wECSenk6bGxRV0TPb1g80j+1xsT9jOFuKx+Ce6WU1MErYnWWgTNBj6QhdD
+    YMkq/n5qNNXRsIsNkhNMqzKJsvTGPoS+v4Tam6s9m7iu0zKzjfE4wCeBeLMjyiVq
+    8VRUTAnM6ln23mS2HMQV+qYvmFemxPszDq/s3fyUrSmJjtKJA0+aMHvS1ayl0qXO
+    OLZ9R46tEsI6S1flIFdOiMT+t+XeSkNw4GibvQkKvXgqw4Nsxm5gyI3iU76Ne/dz
+    5tBmGDTjBZ5EWv6l1OPGMbHoNyC6r7Xl5Rybmq/E0pdlLCIXoAwrs10CAwEAAaOC
+    AVUwggFRMB8GA1UdIwQYMBaAFGCOFOHltbIETp/9G+Ckx3z/nE/CMD4GCCsGAQUF
+    BwEBBDIwMDAuBggrBgEFBQcwAYYiaHR0cDovL2lwYS1jYS5za3lyLmRjYS5zY2Mv
+    Y2Evb2NzcDAOBgNVHQ8BAf8EBAMCBPAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsG
+    AQUFBwMCMHcGA1UdHwRwMG4wbKA0oDKGMGh0dHA6Ly9pcGEtY2Euc2t5ci5kY2Eu
+    c2NjL2lwYS9jcmwvTWFzdGVyQ1JMLmJpbqI0pDIwMDEOMAwGA1UECgwFaXBhY2Ex
+    HjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAdBgNVHQ4EFgQULcywjxJb
+    /rhJAu2z8HlRLIrokB8wJwYDVR0RBCAwHoIcKi5hcHBzLm9jcDQtdXBpLnNreXIu
+    ZGNhLnNjYzANBgkqhkiG9w0BAQsFAAOCAYEAhagv04XuRmOguu+8WidccNpBgPM1
+    c9oHgBMvAdx0m/j5cjcPK8Leqw7K5LSKcP4mZyKfEcJ1STempCB78NxuVR+Yam6j
+    HUtDeGEGLUQKqsUDn+STmZkWeUOB/K2P68di+p22xOq8P/aUluELmZBiXVitr2sq
+    fvEa+1M10n2/X159YUY6IAT2bv8Nkz+5toOzvtx6KYQ0vcaHMtMPaOAk3AzCXb3W
+    LYhkDZUFgncCNZN+leeuMMVoA20T7C45zJdjOEX3r8L0rKNGmwq8OWleVF5jljHh
+    Xg8PuNqgs5C3g8R/Ldi6bpetD9myVJY2bMLm6Y/qNRFAeSm1b/iaN32pVGF8KAyT
+    Li5quFtwt3Fn3xx2sbz+bBmL4pjmiaHmAdkpt8eluE7vG+etoWGvyADbaJmLqNb8
+    9PRi/MPmDFwA5TqX7HRolS82X2IFceNuPSMcw/aWnaYnnihpXvX1jEhQjDoAYBxV
+    6k9ANQK1cybCkigEGoNj8oJzpyLgR+xIBNnk
+    -----END CERTIFICATE-----
   idm.skyr.dca.scc: |
     -----BEGIN CERTIFICATE-----
     MIIEjjCCAvagAwIBAgIBATANBgkqhkiG9w0BAQsFADA3MRUwEwYDVQQKDAxTS1lS
