@@ -3,6 +3,8 @@ kind: Secret
 metadata:
   name: mysql-secret
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 type: Opaque
 stringData:
   MYSQL_ROOT_PASSWORD: "ChangeMe!"
@@ -12,6 +14,8 @@ kind: Service
 metadata:
   name: mysql
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   ports:
   - name: mysql
@@ -25,6 +29,8 @@ kind: StatefulSet
 metadata:
   name: mysql
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   serviceName: mysql
   replicas: 1
