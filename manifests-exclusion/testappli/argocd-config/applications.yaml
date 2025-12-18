@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-testappli-rbac
-  namespace: argocd-rbac
+  name: app-testappli-rbac-dev
+  namespace: argocd-dev
 spec:
   project: default
   source:
     repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
     targetRevision: main
-    path: manifests-exclusion/testappli/rbac
+    path: manifests-exclusion/testappli/rbac-dev
   destination:
     server: https://kubernetes.default.svc
     namespace: testappli
@@ -20,7 +20,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-testappli-dev
+  name: app-testappli-apps
   namespace: argocd-dev
 spec:
   project: default
@@ -39,7 +39,26 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-testappli-gov
+  name: app-testappli-rbac-gov
+  namespace: argocd-gov
+spec:
+  project: default
+  source:
+    repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
+    targetRevision: main
+    path: manifests-exclusion/testappli/rbac-gov
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: testappli
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-testappli-governance
   namespace: argocd-gov
 spec:
   project: default
