@@ -7,54 +7,40 @@ spec:
   extraConfig:
     application.resourceTrackingMethod: annotation
     installationID: argocd-rbac
-    oidc.config: |
-      name: FreeIPA
+    oidc.config: 'name: FreeIPA
+
       issuer: https://argocd-rbac-server-argocd-rbac.apps.ocp4-upi.skyr.dca.scc/api/dex
+
       clientID: argo-cd
-      clientSecret: $oidc.dex.clientSecret
+
+      clientSecret: \.dex.clientSecret
+
       requestedScopes: ["openid", "profile", "email", "groups"]
-      insecureSkipVerify: true
-    resource.inclusions: |
-      - apiGroups: ["rbac.authorization.k8s.io"]
-        kinds: ["Role","RoleBinding"]
-      - apiGroups: [""]
-        kinds: ["ServiceAccount"]
+
+      rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVqakNDQXZhZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREEzTVJVd0V3WURWUVFLREF4VFMxbFMKTGtSRFFTNVRRME14SGpBY0JnTlZCQU1NRlVObGNuUnBabWxqWVhSbElFRjFkR2h2Y21sMGVUQWVGdzB5TkRBeApNekF3T0RNM05EUmFGdzAwTkRBeE16QXdPRE0zTkRSYU1EY3hGVEFUQmdOVkJBb01ERk5MV1ZJdVJFTkJMbE5EClF6RWVNQndHQTFVRUF3d1ZRMlZ5ZEdsbWFXTmhkR1VnUVhWMGFHOXlhWFI1TUlJQm9qQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBWThBTUlJQmlnS0NBWUVBdVRxRmlUdEQ1aU1iejJzOEFDL2lzeW4reVRHMXZTNnMrY3R5MWZXLwpEWjNKQk9aS3Jid2VJVUg3Z1g3bVdnclZXTVdyK1NzL25yeHpWYytZbHo5Y1g0aS9uaUYzTFNKQmM0U3U5MU1lCi9MQ2JyOFFyeS82NjZzbW1TSGVEbGt5U0tJMEZITVNsL09XL1JXRmJ1NXhibmFlU0taWk5JU1NwcklxSGlMdzEKeUY0SjJscFB2a09zNW1ITlppT0wyY0QveVFqVGZjYlo2cmZ3SUNwRmZqTmJNTTdMdTFONUd5YUxidHNJTndKMAppaUhVUVlCN0R2OGkzM1ZTVTA3a1lGcFNDbEs3TXlIcEJ1Y1F6MzNGZVRheHpGTHNnYmpmaDV5RXJtOENjNldjCkJVQXFxbnIxNldKWFNnMFBzeVRiVmFGbmVsS0dZZHpSK00rTGVMOTYzTXVJMDFiUTNJUktOQ1JwWndWUlhMVlUKY0V4ZXdhR3NRbHNRWXcxQkNSOXNxWXByZnZaOWNPM0NwdG8vR0NrRnJiSGNwczQ0eFVLeU1qV251MmhQQXdUMQpGSW9ld3RCdGpiRHhNc2VWQlRRd0lEeU1MRXdpS2xmZHpjN3VDNlBEZVYzbTNwbUczVTJ3cTYzTWtQVGNzajRhCndTa2VZSDdCdDR6UXhEeFVpa0pWM2tDdEFnTUJBQUdqZ2FRd2dhRXdId1lEVlIwakJCZ3dGb0FVWUk0VTRlVzEKc2dST24vMGI0S1RIZlArY1Q4SXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU9CZ05WSFE4QkFmOEVCQU1DQWNZdwpIUVlEVlIwT0JCWUVGR0NPRk9IbHRiSUVUcC85RytDa3gzei9uRS9DTUQ0R0NDc0dBUVVGQndFQkJESXdNREF1CkJnZ3JCZ0VGQlFjd0FZWWlhSFIwY0RvdkwybHdZUzFqWVM1emEzbHlMbVJqWVM1elkyTXZZMkV2YjJOemNEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBWXdQT0ZYOVpTbTY4Q2RCTFNKRURNOXdBVlRWMkV3SS8remhlcCtxcApTVHJLY0lrOHhUa0lVZUw2bEI3cUlBSXFwRjJ5azVMV3M0NlZqakZXdjhJa2pzOTEzamwwL3dCbjJjZmo2NDNLClJDZGRuNEQxV0NNZ0VadjVnVThhR1lpVEk3OTQzbTV5dm5rTVhyZHBTWXNLQnEzam4rajd6Q2JOV3NoWm1UaTcKSm5LOHZWSDNkL2VVZHpQM0lUSnU5dDVmMnJoRmppbjkxMUtLYzRPZDZJcUh1SmNIZWVqRTVsL2tiTktSRjNDWAo5UThuY0VSWW53OUM5eWZheUtFVVBsKzBUY3pOc29rK045bVh2UGJHMnhuWE91YytwT1Fndk9RdXFZWTFFT0QzCmNNYnR5aTFaQ1VpRXp3bEJCb3BXNElhay9ieVhIbzRCM3lUTklnRHVld0czL29LNXV6MFdCMjBXQjhUeXYxcTkKanF5SjVPMGNWaHlOKzhLYWZHbk14Tk1tTkVNd1pSc3NPMEI1dmc4b0NrVnQ1V0Q2R0NoQlpUZ0F4UG5kZElNbApWZFJFN2EwMFU1dFM2a1NwK05Nam9sTE5odFFpQTlMb25Ca2tYejNPSW8wd1ErMW8zOVhTbm5HdTNRYnc0aUZ5CndlSWRPTk9INXk1bXFMUFU0aU54WFcyVwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t
+
+      '
+    resource.inclusions: "- apiGroups: [\"rbac.authorization.k8s.io\"]\n  kinds: [\"\
+      Role\",\"RoleBinding\"]\n- apiGroups: [\"\"]\n  kinds: [\"ServiceAccount\"]\n"
   namespaceManagement:
-    - allowManagedBy: true
-      name: testappli
+  - allowManagedBy: true
+    name: testappli
   server:
     route:
       enabled: true
   sso:
-    provider: dex
     dex:
-      config: |
-        logger:
-          level: debug
-        connectors:
-        - type: ldap
-          id: freeipa
-          name: FreeIPA
-          config:
-            host: idm.skyr.dca.scc:636
-            insecureNoSSL: false
-            insecureSkipVerify: true
-            bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-            bindPW: Redhat2025!
-            userSearch:
-              baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-              filter: "(objectClass=person)"
-              username: uid
-              idAttr: uid
-              emailAttr: mail
-              nameAttr: cn
-            groupSearch:
-              baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc
-              filter: "(objectClass=groupOfNames)"
-              userMatchers:
-              - userAttr: dn
-                groupAttr: member
-              nameAttr: cn
+      config: "logger:\n  level: debug\nconnectors:\n- type: ldap\n  id: freeipa\n\
+        \  name: FreeIPA\n  config:\n    host: idm.skyr.dca.scc:636\n    insecureNoSSL:\
+        \ false\n    insecureSkipVerify: false\n    rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVqakNDQXZhZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREEzTVJVd0V3WURWUVFLREF4VFMxbFMKTGtSRFFTNVRRME14SGpBY0JnTlZCQU1NRlVObGNuUnBabWxqWVhSbElFRjFkR2h2Y21sMGVUQWVGdzB5TkRBeApNekF3T0RNM05EUmFGdzAwTkRBeE16QXdPRE0zTkRSYU1EY3hGVEFUQmdOVkJBb01ERk5MV1ZJdVJFTkJMbE5EClF6RWVNQndHQTFVRUF3d1ZRMlZ5ZEdsbWFXTmhkR1VnUVhWMGFHOXlhWFI1TUlJQm9qQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBWThBTUlJQmlnS0NBWUVBdVRxRmlUdEQ1aU1iejJzOEFDL2lzeW4reVRHMXZTNnMrY3R5MWZXLwpEWjNKQk9aS3Jid2VJVUg3Z1g3bVdnclZXTVdyK1NzL25yeHpWYytZbHo5Y1g0aS9uaUYzTFNKQmM0U3U5MU1lCi9MQ2JyOFFyeS82NjZzbW1TSGVEbGt5U0tJMEZITVNsL09XL1JXRmJ1NXhibmFlU0taWk5JU1NwcklxSGlMdzEKeUY0SjJscFB2a09zNW1ITlppT0wyY0QveVFqVGZjYlo2cmZ3SUNwRmZqTmJNTTdMdTFONUd5YUxidHNJTndKMAppaUhVUVlCN0R2OGkzM1ZTVTA3a1lGcFNDbEs3TXlIcEJ1Y1F6MzNGZVRheHpGTHNnYmpmaDV5RXJtOENjNldjCkJVQXFxbnIxNldKWFNnMFBzeVRiVmFGbmVsS0dZZHpSK00rTGVMOTYzTXVJMDFiUTNJUktOQ1JwWndWUlhMVlUKY0V4ZXdhR3NRbHNRWXcxQkNSOXNxWXByZnZaOWNPM0NwdG8vR0NrRnJiSGNwczQ0eFVLeU1qV251MmhQQXdUMQpGSW9ld3RCdGpiRHhNc2VWQlRRd0lEeU1MRXdpS2xmZHpjN3VDNlBEZVYzbTNwbUczVTJ3cTYzTWtQVGNzajRhCndTa2VZSDdCdDR6UXhEeFVpa0pWM2tDdEFnTUJBQUdqZ2FRd2dhRXdId1lEVlIwakJCZ3dGb0FVWUk0VTRlVzEKc2dST24vMGI0S1RIZlArY1Q4SXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU9CZ05WSFE4QkFmOEVCQU1DQWNZdwpIUVlEVlIwT0JCWUVGR0NPRk9IbHRiSUVUcC85RytDa3gzei9uRS9DTUQ0R0NDc0dBUVVGQndFQkJESXdNREF1CkJnZ3JCZ0VGQlFjd0FZWWlhSFIwY0RvdkwybHdZUzFqWVM1emEzbHlMbVJqWVM1elkyTXZZMkV2YjJOemNEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBWXdQT0ZYOVpTbTY4Q2RCTFNKRURNOXdBVlRWMkV3SS8remhlcCtxcApTVHJLY0lrOHhUa0lVZUw2bEI3cUlBSXFwRjJ5azVMV3M0NlZqakZXdjhJa2pzOTEzamwwL3dCbjJjZmo2NDNLClJDZGRuNEQxV0NNZ0VadjVnVThhR1lpVEk3OTQzbTV5dm5rTVhyZHBTWXNLQnEzam4rajd6Q2JOV3NoWm1UaTcKSm5LOHZWSDNkL2VVZHpQM0lUSnU5dDVmMnJoRmppbjkxMUtLYzRPZDZJcUh1SmNIZWVqRTVsL2tiTktSRjNDWAo5UThuY0VSWW53OUM5eWZheUtFVVBsKzBUY3pOc29rK045bVh2UGJHMnhuWE91YytwT1Fndk9RdXFZWTFFT0QzCmNNYnR5aTFaQ1VpRXp3bEJCb3BXNElhay9ieVhIbzRCM3lUTklnRHVld0czL29LNXV6MFdCMjBXQjhUeXYxcTkKanF5SjVPMGNWaHlOKzhLYWZHbk14Tk1tTkVNd1pSc3NPMEI1dmc4b0NrVnQ1V0Q2R0NoQlpUZ0F4UG5kZElNbApWZFJFN2EwMFU1dFM2a1NwK05Nam9sTE5odFFpQTlMb25Ca2tYejNPSW8wd1ErMW8zOVhTbm5HdTNRYnc0aUZ5CndlSWRPTk9INXk1bXFMUFU0aU54WFcyVwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t\n\
+        \    bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc\n  \
+        \  bindPW: Redhat2025!\n    userSearch:\n      baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc\n\
+        \      filter: \"(objectClass=person)\"\n      username: uid\n      idAttr:\
+        \ uid\n      emailAttr: mail\n      nameAttr: cn\n    groupSearch:\n     \
+        \ baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc\n      filter: \"(objectClass=groupOfNames)\"\
+        \n      userMatchers:\n      - userAttr: dn\n        groupAttr: member\n \
+        \     nameAttr: cn\n"
+    provider: dex
 ---
 apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
@@ -65,54 +51,41 @@ spec:
   extraConfig:
     application.resourceTrackingMethod: annotation
     installationID: argocd-dev
-    oidc.config: |
-      name: FreeIPA
+    oidc.config: 'name: FreeIPA
+
       issuer: https://argocd-dev-server-argocd-dev.apps.ocp4-upi.skyr.dca.scc/api/dex
+
       clientID: argo-cd
-      clientSecret: $oidc.dex.clientSecret
+
+      clientSecret: \.dex.clientSecret
+
       requestedScopes: ["openid", "profile", "email", "groups"]
-      insecureSkipVerify: true
-    resource.inclusions: |
-      - apiGroups: ["rbac.authorization.k8s.io"]
-        kinds: ["Role","RoleBinding"]
-      - apiGroups: [""]
-        kinds: ["ServiceAccount","LimitRange","ResourceQuota","NetworkPolicy"]
+
+      rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVqakNDQXZhZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREEzTVJVd0V3WURWUVFLREF4VFMxbFMKTGtSRFFTNVRRME14SGpBY0JnTlZCQU1NRlVObGNuUnBabWxqWVhSbElFRjFkR2h2Y21sMGVUQWVGdzB5TkRBeApNekF3T0RNM05EUmFGdzAwTkRBeE16QXdPRE0zTkRSYU1EY3hGVEFUQmdOVkJBb01ERk5MV1ZJdVJFTkJMbE5EClF6RWVNQndHQTFVRUF3d1ZRMlZ5ZEdsbWFXTmhkR1VnUVhWMGFHOXlhWFI1TUlJQm9qQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBWThBTUlJQmlnS0NBWUVBdVRxRmlUdEQ1aU1iejJzOEFDL2lzeW4reVRHMXZTNnMrY3R5MWZXLwpEWjNKQk9aS3Jid2VJVUg3Z1g3bVdnclZXTVdyK1NzL25yeHpWYytZbHo5Y1g0aS9uaUYzTFNKQmM0U3U5MU1lCi9MQ2JyOFFyeS82NjZzbW1TSGVEbGt5U0tJMEZITVNsL09XL1JXRmJ1NXhibmFlU0taWk5JU1NwcklxSGlMdzEKeUY0SjJscFB2a09zNW1ITlppT0wyY0QveVFqVGZjYlo2cmZ3SUNwRmZqTmJNTTdMdTFONUd5YUxidHNJTndKMAppaUhVUVlCN0R2OGkzM1ZTVTA3a1lGcFNDbEs3TXlIcEJ1Y1F6MzNGZVRheHpGTHNnYmpmaDV5RXJtOENjNldjCkJVQXFxbnIxNldKWFNnMFBzeVRiVmFGbmVsS0dZZHpSK00rTGVMOTYzTXVJMDFiUTNJUktOQ1JwWndWUlhMVlUKY0V4ZXdhR3NRbHNRWXcxQkNSOXNxWXByZnZaOWNPM0NwdG8vR0NrRnJiSGNwczQ0eFVLeU1qV251MmhQQXdUMQpGSW9ld3RCdGpiRHhNc2VWQlRRd0lEeU1MRXdpS2xmZHpjN3VDNlBEZVYzbTNwbUczVTJ3cTYzTWtQVGNzajRhCndTa2VZSDdCdDR6UXhEeFVpa0pWM2tDdEFnTUJBQUdqZ2FRd2dhRXdId1lEVlIwakJCZ3dGb0FVWUk0VTRlVzEKc2dST24vMGI0S1RIZlArY1Q4SXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU9CZ05WSFE4QkFmOEVCQU1DQWNZdwpIUVlEVlIwT0JCWUVGR0NPRk9IbHRiSUVUcC85RytDa3gzei9uRS9DTUQ0R0NDc0dBUVVGQndFQkJESXdNREF1CkJnZ3JCZ0VGQlFjd0FZWWlhSFIwY0RvdkwybHdZUzFqWVM1emEzbHlMbVJqWVM1elkyTXZZMkV2YjJOemNEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBWXdQT0ZYOVpTbTY4Q2RCTFNKRURNOXdBVlRWMkV3SS8remhlcCtxcApTVHJLY0lrOHhUa0lVZUw2bEI3cUlBSXFwRjJ5azVMV3M0NlZqakZXdjhJa2pzOTEzamwwL3dCbjJjZmo2NDNLClJDZGRuNEQxV0NNZ0VadjVnVThhR1lpVEk3OTQzbTV5dm5rTVhyZHBTWXNLQnEzam4rajd6Q2JOV3NoWm1UaTcKSm5LOHZWSDNkL2VVZHpQM0lUSnU5dDVmMnJoRmppbjkxMUtLYzRPZDZJcUh1SmNIZWVqRTVsL2tiTktSRjNDWAo5UThuY0VSWW53OUM5eWZheUtFVVBsKzBUY3pOc29rK045bVh2UGJHMnhuWE91YytwT1Fndk9RdXFZWTFFT0QzCmNNYnR5aTFaQ1VpRXp3bEJCb3BXNElhay9ieVhIbzRCM3lUTklnRHVld0czL29LNXV6MFdCMjBXQjhUeXYxcTkKanF5SjVPMGNWaHlOKzhLYWZHbk14Tk1tTkVNd1pSc3NPMEI1dmc4b0NrVnQ1V0Q2R0NoQlpUZ0F4UG5kZElNbApWZFJFN2EwMFU1dFM2a1NwK05Nam9sTE5odFFpQTlMb25Ca2tYejNPSW8wd1ErMW8zOVhTbm5HdTNRYnc0aUZ5CndlSWRPTk9INXk1bXFMUFU0aU54WFcyVwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t
+
+      '
+    resource.inclusions: "- apiGroups: [\"rbac.authorization.k8s.io\"]\n  kinds: [\"\
+      Role\",\"RoleBinding\"]\n- apiGroups: [\"\"]\n  kinds: [\"ServiceAccount\",\"\
+      LimitRange\",\"ResourceQuota\",\"NetworkPolicy\"]\n"
   namespaceManagement:
-    - allowManagedBy: true
-      name: testappli
+  - allowManagedBy: true
+    name: testappli
   server:
     route:
       enabled: true
   sso:
-    provider: dex
     dex:
-      config: |
-        logger:
-          level: debug
-        connectors:
-        - type: ldap
-          id: freeipa
-          name: FreeIPA
-          config:
-            host: idm.skyr.dca.scc:636
-            insecureNoSSL: false
-            insecureSkipVerify: true
-            bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-            bindPW: Redhat2025!
-            userSearch:
-              baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-              filter: "(objectClass=person)"
-              username: uid
-              idAttr: uid
-              emailAttr: mail
-              nameAttr: cn
-            groupSearch:
-              baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc
-              filter: "(objectClass=groupOfNames)"
-              userMatchers:
-              - userAttr: dn
-                groupAttr: member
-              nameAttr: cn
+      config: "logger:\n  level: debug\nconnectors:\n- type: ldap\n  id: freeipa\n\
+        \  name: FreeIPA\n  config:\n    host: idm.skyr.dca.scc:636\n    insecureNoSSL:\
+        \ false\n    insecureSkipVerify: false\n    rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVqakNDQXZhZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREEzTVJVd0V3WURWUVFLREF4VFMxbFMKTGtSRFFTNVRRME14SGpBY0JnTlZCQU1NRlVObGNuUnBabWxqWVhSbElFRjFkR2h2Y21sMGVUQWVGdzB5TkRBeApNekF3T0RNM05EUmFGdzAwTkRBeE16QXdPRE0zTkRSYU1EY3hGVEFUQmdOVkJBb01ERk5MV1ZJdVJFTkJMbE5EClF6RWVNQndHQTFVRUF3d1ZRMlZ5ZEdsbWFXTmhkR1VnUVhWMGFHOXlhWFI1TUlJQm9qQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBWThBTUlJQmlnS0NBWUVBdVRxRmlUdEQ1aU1iejJzOEFDL2lzeW4reVRHMXZTNnMrY3R5MWZXLwpEWjNKQk9aS3Jid2VJVUg3Z1g3bVdnclZXTVdyK1NzL25yeHpWYytZbHo5Y1g0aS9uaUYzTFNKQmM0U3U5MU1lCi9MQ2JyOFFyeS82NjZzbW1TSGVEbGt5U0tJMEZITVNsL09XL1JXRmJ1NXhibmFlU0taWk5JU1NwcklxSGlMdzEKeUY0SjJscFB2a09zNW1ITlppT0wyY0QveVFqVGZjYlo2cmZ3SUNwRmZqTmJNTTdMdTFONUd5YUxidHNJTndKMAppaUhVUVlCN0R2OGkzM1ZTVTA3a1lGcFNDbEs3TXlIcEJ1Y1F6MzNGZVRheHpGTHNnYmpmaDV5RXJtOENjNldjCkJVQXFxbnIxNldKWFNnMFBzeVRiVmFGbmVsS0dZZHpSK00rTGVMOTYzTXVJMDFiUTNJUktOQ1JwWndWUlhMVlUKY0V4ZXdhR3NRbHNRWXcxQkNSOXNxWXByZnZaOWNPM0NwdG8vR0NrRnJiSGNwczQ0eFVLeU1qV251MmhQQXdUMQpGSW9ld3RCdGpiRHhNc2VWQlRRd0lEeU1MRXdpS2xmZHpjN3VDNlBEZVYzbTNwbUczVTJ3cTYzTWtQVGNzajRhCndTa2VZSDdCdDR6UXhEeFVpa0pWM2tDdEFnTUJBQUdqZ2FRd2dhRXdId1lEVlIwakJCZ3dGb0FVWUk0VTRlVzEKc2dST24vMGI0S1RIZlArY1Q4SXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU9CZ05WSFE4QkFmOEVCQU1DQWNZdwpIUVlEVlIwT0JCWUVGR0NPRk9IbHRiSUVUcC85RytDa3gzei9uRS9DTUQ0R0NDc0dBUVVGQndFQkJESXdNREF1CkJnZ3JCZ0VGQlFjd0FZWWlhSFIwY0RvdkwybHdZUzFqWVM1emEzbHlMbVJqWVM1elkyTXZZMkV2YjJOemNEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBWXdQT0ZYOVpTbTY4Q2RCTFNKRURNOXdBVlRWMkV3SS8remhlcCtxcApTVHJLY0lrOHhUa0lVZUw2bEI3cUlBSXFwRjJ5azVMV3M0NlZqakZXdjhJa2pzOTEzamwwL3dCbjJjZmo2NDNLClJDZGRuNEQxV0NNZ0VadjVnVThhR1lpVEk3OTQzbTV5dm5rTVhyZHBTWXNLQnEzam4rajd6Q2JOV3NoWm1UaTcKSm5LOHZWSDNkL2VVZHpQM0lUSnU5dDVmMnJoRmppbjkxMUtLYzRPZDZJcUh1SmNIZWVqRTVsL2tiTktSRjNDWAo5UThuY0VSWW53OUM5eWZheUtFVVBsKzBUY3pOc29rK045bVh2UGJHMnhuWE91YytwT1Fndk9RdXFZWTFFT0QzCmNNYnR5aTFaQ1VpRXp3bEJCb3BXNElhay9ieVhIbzRCM3lUTklnRHVld0czL29LNXV6MFdCMjBXQjhUeXYxcTkKanF5SjVPMGNWaHlOKzhLYWZHbk14Tk1tTkVNd1pSc3NPMEI1dmc4b0NrVnQ1V0Q2R0NoQlpUZ0F4UG5kZElNbApWZFJFN2EwMFU1dFM2a1NwK05Nam9sTE5odFFpQTlMb25Ca2tYejNPSW8wd1ErMW8zOVhTbm5HdTNRYnc0aUZ5CndlSWRPTk9INXk1bXFMUFU0aU54WFcyVwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t\n\
+        \    bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc\n  \
+        \  bindPW: Redhat2025!\n    userSearch:\n      baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc\n\
+        \      filter: \"(objectClass=person)\"\n      username: uid\n      idAttr:\
+        \ uid\n      emailAttr: mail\n      nameAttr: cn\n    groupSearch:\n     \
+        \ baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc\n      filter: \"(objectClass=groupOfNames)\"\
+        \n      userMatchers:\n      - userAttr: dn\n        groupAttr: member\n \
+        \     nameAttr: cn\n"
+    provider: dex
 ---
 apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
@@ -123,49 +96,37 @@ spec:
   extraConfig:
     application.resourceTrackingMethod: annotation
     installationID: argocd-gov
-    oidc.config: |
-      name: FreeIPA
+    oidc.config: 'name: FreeIPA
+
       issuer: https://argocd-gov-server-argocd-gov.apps.ocp4-upi.skyr.dca.scc/api/dex
+
       clientID: argo-cd
-      clientSecret: $oidc.dex.clientSecret
+
+      clientSecret: \.dex.clientSecret
+
       requestedScopes: ["openid", "profile", "email", "groups"]
-      insecureSkipVerify: true
-    resource.inclusions: |
-      - apiGroups: [""]
-        kinds: ["ResourceQuota","LimitRange"]
+
+      rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVqakNDQXZhZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREEzTVJVd0V3WURWUVFLREF4VFMxbFMKTGtSRFFTNVRRME14SGpBY0JnTlZCQU1NRlVObGNuUnBabWxqWVhSbElFRjFkR2h2Y21sMGVUQWVGdzB5TkRBeApNekF3T0RNM05EUmFGdzAwTkRBeE16QXdPRE0zTkRSYU1EY3hGVEFUQmdOVkJBb01ERk5MV1ZJdVJFTkJMbE5EClF6RWVNQndHQTFVRUF3d1ZRMlZ5ZEdsbWFXTmhkR1VnUVhWMGFHOXlhWFI1TUlJQm9qQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBWThBTUlJQmlnS0NBWUVBdVRxRmlUdEQ1aU1iejJzOEFDL2lzeW4reVRHMXZTNnMrY3R5MWZXLwpEWjNKQk9aS3Jid2VJVUg3Z1g3bVdnclZXTVdyK1NzL25yeHpWYytZbHo5Y1g0aS9uaUYzTFNKQmM0U3U5MU1lCi9MQ2JyOFFyeS82NjZzbW1TSGVEbGt5U0tJMEZITVNsL09XL1JXRmJ1NXhibmFlU0taWk5JU1NwcklxSGlMdzEKeUY0SjJscFB2a09zNW1ITlppT0wyY0QveVFqVGZjYlo2cmZ3SUNwRmZqTmJNTTdMdTFONUd5YUxidHNJTndKMAppaUhVUVlCN0R2OGkzM1ZTVTA3a1lGcFNDbEs3TXlIcEJ1Y1F6MzNGZVRheHpGTHNnYmpmaDV5RXJtOENjNldjCkJVQXFxbnIxNldKWFNnMFBzeVRiVmFGbmVsS0dZZHpSK00rTGVMOTYzTXVJMDFiUTNJUktOQ1JwWndWUlhMVlUKY0V4ZXdhR3NRbHNRWXcxQkNSOXNxWXByZnZaOWNPM0NwdG8vR0NrRnJiSGNwczQ0eFVLeU1qV251MmhQQXdUMQpGSW9ld3RCdGpiRHhNc2VWQlRRd0lEeU1MRXdpS2xmZHpjN3VDNlBEZVYzbTNwbUczVTJ3cTYzTWtQVGNzajRhCndTa2VZSDdCdDR6UXhEeFVpa0pWM2tDdEFnTUJBQUdqZ2FRd2dhRXdId1lEVlIwakJCZ3dGb0FVWUk0VTRlVzEKc2dST24vMGI0S1RIZlArY1Q4SXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU9CZ05WSFE4QkFmOEVCQU1DQWNZdwpIUVlEVlIwT0JCWUVGR0NPRk9IbHRiSUVUcC85RytDa3gzei9uRS9DTUQ0R0NDc0dBUVVGQndFQkJESXdNREF1CkJnZ3JCZ0VGQlFjd0FZWWlhSFIwY0RvdkwybHdZUzFqWVM1emEzbHlMbVJqWVM1elkyTXZZMkV2YjJOemNEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBWXdQT0ZYOVpTbTY4Q2RCTFNKRURNOXdBVlRWMkV3SS8remhlcCtxcApTVHJLY0lrOHhUa0lVZUw2bEI3cUlBSXFwRjJ5azVMV3M0NlZqakZXdjhJa2pzOTEzamwwL3dCbjJjZmo2NDNLClJDZGRuNEQxV0NNZ0VadjVnVThhR1lpVEk3OTQzbTV5dm5rTVhyZHBTWXNLQnEzam4rajd6Q2JOV3NoWm1UaTcKSm5LOHZWSDNkL2VVZHpQM0lUSnU5dDVmMnJoRmppbjkxMUtLYzRPZDZJcUh1SmNIZWVqRTVsL2tiTktSRjNDWAo5UThuY0VSWW53OUM5eWZheUtFVVBsKzBUY3pOc29rK045bVh2UGJHMnhuWE91YytwT1Fndk9RdXFZWTFFT0QzCmNNYnR5aTFaQ1VpRXp3bEJCb3BXNElhay9ieVhIbzRCM3lUTklnRHVld0czL29LNXV6MFdCMjBXQjhUeXYxcTkKanF5SjVPMGNWaHlOKzhLYWZHbk14Tk1tTkVNd1pSc3NPMEI1dmc4b0NrVnQ1V0Q2R0NoQlpUZ0F4UG5kZElNbApWZFJFN2EwMFU1dFM2a1NwK05Nam9sTE5odFFpQTlMb25Ca2tYejNPSW8wd1ErMW8zOVhTbm5HdTNRYnc0aUZ5CndlSWRPTk9INXk1bXFMUFU0aU54WFcyVwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t
+
+      '
+    resource.inclusions: "- apiGroups: [\"\"]\n  kinds: [\"ResourceQuota\",\"LimitRange\"\
+      ]\n"
   namespaceManagement:
-    - allowManagedBy: true
-      name: testappli
+  - allowManagedBy: true
+    name: testappli
   server:
     route:
       enabled: true
   sso:
-    provider: dex
     dex:
-      config: |
-        logger:
-          level: debug
-        connectors:
-        - type: ldap
-          id: freeipa
-          name: FreeIPA
-          config:
-            host: idm.skyr.dca.scc:636
-            insecureNoSSL: false
-            insecureSkipVerify: true
-            bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-            bindPW: Redhat2025!
-            userSearch:
-              baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc
-              filter: "(objectClass=person)"
-              username: uid
-              idAttr: uid
-              emailAttr: mail
-              nameAttr: cn
-            groupSearch:
-              baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc
-              filter: "(objectClass=groupOfNames)"
-              userMatchers:
-              - userAttr: dn
-                groupAttr: member
-              nameAttr: cn
+      config: "logger:\n  level: debug\nconnectors:\n- type: ldap\n  id: freeipa\n\
+        \  name: FreeIPA\n  config:\n    host: idm.skyr.dca.scc:636\n    insecureNoSSL:\
+        \ false\n    insecureSkipVerify: false\n    rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVqakNDQXZhZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREEzTVJVd0V3WURWUVFLREF4VFMxbFMKTGtSRFFTNVRRME14SGpBY0JnTlZCQU1NRlVObGNuUnBabWxqWVhSbElFRjFkR2h2Y21sMGVUQWVGdzB5TkRBeApNekF3T0RNM05EUmFGdzAwTkRBeE16QXdPRE0zTkRSYU1EY3hGVEFUQmdOVkJBb01ERk5MV1ZJdVJFTkJMbE5EClF6RWVNQndHQTFVRUF3d1ZRMlZ5ZEdsbWFXTmhkR1VnUVhWMGFHOXlhWFI1TUlJQm9qQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBWThBTUlJQmlnS0NBWUVBdVRxRmlUdEQ1aU1iejJzOEFDL2lzeW4reVRHMXZTNnMrY3R5MWZXLwpEWjNKQk9aS3Jid2VJVUg3Z1g3bVdnclZXTVdyK1NzL25yeHpWYytZbHo5Y1g0aS9uaUYzTFNKQmM0U3U5MU1lCi9MQ2JyOFFyeS82NjZzbW1TSGVEbGt5U0tJMEZITVNsL09XL1JXRmJ1NXhibmFlU0taWk5JU1NwcklxSGlMdzEKeUY0SjJscFB2a09zNW1ITlppT0wyY0QveVFqVGZjYlo2cmZ3SUNwRmZqTmJNTTdMdTFONUd5YUxidHNJTndKMAppaUhVUVlCN0R2OGkzM1ZTVTA3a1lGcFNDbEs3TXlIcEJ1Y1F6MzNGZVRheHpGTHNnYmpmaDV5RXJtOENjNldjCkJVQXFxbnIxNldKWFNnMFBzeVRiVmFGbmVsS0dZZHpSK00rTGVMOTYzTXVJMDFiUTNJUktOQ1JwWndWUlhMVlUKY0V4ZXdhR3NRbHNRWXcxQkNSOXNxWXByZnZaOWNPM0NwdG8vR0NrRnJiSGNwczQ0eFVLeU1qV251MmhQQXdUMQpGSW9ld3RCdGpiRHhNc2VWQlRRd0lEeU1MRXdpS2xmZHpjN3VDNlBEZVYzbTNwbUczVTJ3cTYzTWtQVGNzajRhCndTa2VZSDdCdDR6UXhEeFVpa0pWM2tDdEFnTUJBQUdqZ2FRd2dhRXdId1lEVlIwakJCZ3dGb0FVWUk0VTRlVzEKc2dST24vMGI0S1RIZlArY1Q4SXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QU9CZ05WSFE4QkFmOEVCQU1DQWNZdwpIUVlEVlIwT0JCWUVGR0NPRk9IbHRiSUVUcC85RytDa3gzei9uRS9DTUQ0R0NDc0dBUVVGQndFQkJESXdNREF1CkJnZ3JCZ0VGQlFjd0FZWWlhSFIwY0RvdkwybHdZUzFqWVM1emEzbHlMbVJqWVM1elkyTXZZMkV2YjJOemNEQU4KQmdrcWhraUc5dzBCQVFzRkFBT0NBWUVBWXdQT0ZYOVpTbTY4Q2RCTFNKRURNOXdBVlRWMkV3SS8remhlcCtxcApTVHJLY0lrOHhUa0lVZUw2bEI3cUlBSXFwRjJ5azVMV3M0NlZqakZXdjhJa2pzOTEzamwwL3dCbjJjZmo2NDNLClJDZGRuNEQxV0NNZ0VadjVnVThhR1lpVEk3OTQzbTV5dm5rTVhyZHBTWXNLQnEzam4rajd6Q2JOV3NoWm1UaTcKSm5LOHZWSDNkL2VVZHpQM0lUSnU5dDVmMnJoRmppbjkxMUtLYzRPZDZJcUh1SmNIZWVqRTVsL2tiTktSRjNDWAo5UThuY0VSWW53OUM5eWZheUtFVVBsKzBUY3pOc29rK045bVh2UGJHMnhuWE91YytwT1Fndk9RdXFZWTFFT0QzCmNNYnR5aTFaQ1VpRXp3bEJCb3BXNElhay9ieVhIbzRCM3lUTklnRHVld0czL29LNXV6MFdCMjBXQjhUeXYxcTkKanF5SjVPMGNWaHlOKzhLYWZHbk14Tk1tTkVNd1pSc3NPMEI1dmc4b0NrVnQ1V0Q2R0NoQlpUZ0F4UG5kZElNbApWZFJFN2EwMFU1dFM2a1NwK05Nam9sTE5odFFpQTlMb25Ca2tYejNPSW8wd1ErMW8zOVhTbm5HdTNRYnc0aUZ5CndlSWRPTk9INXk1bXFMUFU0aU54WFcyVwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t\n\
+        \    bindDN: uid=openshift,cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc\n  \
+        \  bindPW: Redhat2025!\n    userSearch:\n      baseDN: cn=users,cn=accounts,dc=skyr,dc=dca,dc=scc\n\
+        \      filter: \"(objectClass=person)\"\n      username: uid\n      idAttr:\
+        \ uid\n      emailAttr: mail\n      nameAttr: cn\n    groupSearch:\n     \
+        \ baseDN: cn=groups,cn=accounts,dc=skyr,dc=dca,dc=scc\n      filter: \"(objectClass=groupOfNames)\"\
+        \n      userMatchers:\n      - userAttr: dn\n        groupAttr: member\n \
+        \     nameAttr: cn\n"
+    provider: dex
