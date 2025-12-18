@@ -297,3 +297,67 @@ Pensez aux Exclusions comme à des **œillères**.
 *   Quand on configure `resource.exclusions` dans la ConfigMap, on dit au binaire Go du contrôleur ArgoCD : "Ne perds même pas de temps à surveiller ces ressources".
 *   Le contrôleur ne lance pas de `WATCH` sur l'API Kubernetes pour ces ressources.
 *   **Conséquence de sécurité** : Même si un hacker prenait le contrôle de l'instance ArgoCD et essayait de créer un `RoleBinding` via l'interface, le contrôleur échouerait probablement car il n'a même pas initialisé le cache interne pour cet objet. C'est le niveau de sécurité maximal.
+
+---
+
+## 7. Troubleshooting
+
+### 7.1 PermissionDenied avec le projet `default`
+- Symptôme:
+  - Message dans l'UI/CLI: `PermissionDenied: resource not permitted by project policy`
+  - Toute App rattachée au projet `default` ne se synchronise pas.
+- Cause:
+  - AppProject `default` est configuré en deny-all (vide: `sourceRepos`, `destinations`, `*Whitelist`).
+- Correctifs:
+  - Assigner l'application à un projet métier: `dev-testappli`, `gov-testappli`, `rbac-testappli`.
+  - Vérifier le projet de l'app: `oc get application -n <ns> <app> -o jsonpath='{.spec.project}'`
+
+### 7.2 `Failed to load live state: namespace "testappli" ... is not managed`
+- Symptôme:
+  - Exemple: `Failed to load live state: namespace "testappli" for Secret "mysql-secret" is not managed`
+- Causes possibles:
+  - L'instance ArgoCD ne gère pas encore le namespace (`spec.sourceNamespaces` absent).
+  - Le RBAC système (Roles `argocd-<inst>-argocd-application-controller/server`) n'existe pas dans le namespace.
+- Vérifications:
+  - `oc get argocd -n <inst> <inst> -o jsonpath='{.spec.sourceNamespaces}'`
+  - `oc get role,rolebinding -n testappli | grep argocd-<inst>`
+- Correctifs:
+  - Ajouter `spec.sourceNamespaces: [testappli]` dans `manifests-exclusion/instances/argocd-instances.yaml`, puis `oc apply -f ...`.
+  - Forcer la réconciliation: `oc annotate argocd <name> -n <ns> argocd.argoproj.io/reconcile="$(date +%s)" --overwrite`.
+  - En dernier recours, recréer les Roles à partir d'une instance qui les possède: `oc get role <ref> -o yaml | sed 's/argocd-rbac/argocd-dev/' | oc apply -f -`.
+
+### 7.3 `roles.rbac.authorization.k8s.io "<name>" not found` lors d'un RoleBinding
+- Symptôme:
+  - SyncError: le RoleBinding échoue car le Role référencé n'existe pas (ordre de création).
+- Causes:
+  - Fichier RBAC mixte géré par la mauvaise instance (cross-namespace/cross-ownership).
+  - Ordonnancement (RoleBinding appliqué avant le Role).
+- Correctifs:
+  - Séparer par instance (comme dans `rbac-access/dev.yaml` et `rbac-access/gov.yaml`).
+  - Option: utiliser des vagues de sync pour imposer l'ordre:
+    ```yaml
+    metadata:
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"   # Role
+    ```
+    ```yaml
+    metadata:
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"   # RoleBinding
+    ```
+
+### 7.4 App en `OutOfSync` mais `Healthy`
+- Symptôme:
+  - ArgoCD indique `OutOfSync` alors que les ressources sont présentes et saines.
+- Causes:
+  - Ressources appliquées manuellement (`oc apply`) qui divergent du manifeste (labels/annotations/managedFields).
+- Correctifs:
+  - Lancer une sync standard; si A/B test ok, utiliser `Replace` (UI) pour réaligner.
+  - Sinon ajouter `ignoreDifferences` ciblé dans l'App ou l'AppProject pour ignorer des champs de statut/managedFields.
+
+### 7.5 TLS / OIDC (certificats)
+- Symptôme:
+  - `x509: certificate signed by unknown authority` (Dex/OIDC)
+- Correctifs:
+  - Monter le bundle CA et définir `SSL_CERT_FILE=/app/config/tls/ca-bundle.crt` dans `spec.server.env` des instances.
+  - Vérifier `issuer`, `redirectURIs` et `staticClients` côté Dex.
