@@ -3,6 +3,8 @@ kind: Role
 metadata:
   name: argocd-gov-quotas
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 rules:
 - apiGroups: [""]
   resources: ["resourcequotas","limitranges"]
@@ -13,6 +15,8 @@ kind: RoleBinding
 metadata:
   name: argocd-gov-quotas
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 subjects:
 - kind: ServiceAccount
   name: argocd-application-controller

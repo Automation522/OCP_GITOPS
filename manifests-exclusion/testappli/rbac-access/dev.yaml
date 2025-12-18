@@ -3,6 +3,8 @@ kind: Role
 metadata:
   name: argocd-dev-apps
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 rules:
 - apiGroups: [""]
   resources: ["configmaps","secrets","services","serviceaccounts","persistentvolumeclaims"]
@@ -19,6 +21,8 @@ kind: RoleBinding
 metadata:
   name: argocd-dev-apps
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 subjects:
 - kind: ServiceAccount
   name: argocd-application-controller

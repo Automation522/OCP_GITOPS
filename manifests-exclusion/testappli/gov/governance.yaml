@@ -3,6 +3,8 @@ kind: ResourceQuota
 metadata:
   name: rq-testappli
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   hard:
     requests.cpu: "2"
@@ -16,6 +18,8 @@ kind: LimitRange
 metadata:
   name: lr-testappli
   namespace: testappli
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   limits:
   - type: Container
