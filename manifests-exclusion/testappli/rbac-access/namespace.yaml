@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: testappli
+  labels:
+    argocd.argoproj.io/managed-by: argocd-rbac
+    argocd.argoproj.io/managed-by-gov: "true"
+    argocd.argoproj.io/managed-by-dev: "true"

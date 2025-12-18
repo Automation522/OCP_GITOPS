@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: rbac-testappli
+  namespace: argocd-rbac
+spec:
+  description: RBAC/namespace management for testappli
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: testappli
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ""
+    kind: Namespace
+  namespaceResourceWhitelist:
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: rbac.authorization.k8s.io
+    kind: RoleBinding
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: dev-testappli
+  namespace: argocd-dev
+spec:
+  description: Application resources for testappli
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: testappli
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: ""
+    kind: ConfigMap
+  - group: ""
+    kind: Secret
+  - group: ""
+    kind: Service
+  - group: "apps"
+    kind: Deployment
+  - group: "apps"
+    kind: StatefulSet
+  - group: "apps"
+    kind: ReplicaSet
+  - group: "route.openshift.io"
+    kind: Route
+  - group: ""
+    kind: PersistentVolumeClaim
+  namespaceResourceBlacklist:
+  - group: ""
+    kind: ResourceQuota
+  - group: ""
+    kind: LimitRange
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gov-testappli
+  namespace: argocd-gov
+spec:
+  description: Governance quotas/limits for testappli
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: testappli
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: ""
+    kind: ResourceQuota
+  - group: ""
+    kind: LimitRange

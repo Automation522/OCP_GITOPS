@@ -1,14 +1,15 @@
+# RBAC instance: namespace + cross-instance rights
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-testappli-rbac-dev
-  namespace: argocd-dev
+  name: app-testappli-rbac
+  namespace: argocd-rbac
 spec:
-  project: default
+  project: rbac-testappli
   source:
     repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
     targetRevision: main
-    path: manifests-exclusion/testappli/rbac-dev
+    path: manifests-exclusion/testappli/rbac-access
   destination:
     server: https://kubernetes.default.svc
     namespace: testappli
@@ -23,7 +24,7 @@ metadata:
   name: app-testappli-apps
   namespace: argocd-dev
 spec:
-  project: default
+  project: dev-testappli
   source:
     repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
     targetRevision: main
@@ -39,29 +40,10 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-testappli-rbac-gov
-  namespace: argocd-gov
-spec:
-  project: default
-  source:
-    repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
-    targetRevision: main
-    path: manifests-exclusion/testappli/rbac-gov
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: testappli
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
   name: app-testappli-governance
   namespace: argocd-gov
 spec:
-  project: default
+  project: gov-testappli
   source:
     repoURL: https://bastion.skyr.dca.scc:3000/demoscc/OCP_GITOPS.git
     targetRevision: main
@@ -73,3 +55,4 @@ spec:
     automated:
       prune: true
       selfHeal: true
+
