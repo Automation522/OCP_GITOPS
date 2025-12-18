@@ -4,10 +4,27 @@ metadata:
   name: argocd-rbac
   namespace: argocd-rbac
 spec:
-  # Namespaces to manage
+  extraConfig:
+    application.resourceTrackingMethod: annotation
+    installationID: argocd-rbac
+    oidc.config: |
+      name: FreeIPA
+      issuer: https://argocd-rbac-server-argocd-rbac.apps.ocp4-upi.skyr.dca.scc/api/dex
+      clientID: argo-cd
+      clientSecret: $oidc.dex.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+      insecureSkipVerify: true
+    resource.inclusions: |
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        kinds: ["Role","RoleBinding"]
+      - apiGroups: [""]
+        kinds: ["ServiceAccount"]
   namespaceManagement:
-    - name: testappli
-      allowManagedBy: true
+    - allowManagedBy: true
+      name: testappli
+  server:
+    route:
+      enabled: true
   sso:
     provider: dex
     dex:
@@ -38,25 +55,6 @@ spec:
               - userAttr: dn
                 groupAttr: member
               nameAttr: cn
-  server:
-    route:
-      enabled: true
-  extraConfig:
-    argocd-cm: |
-      installationID: "argocd-rbac"
-      application.resourceTrackingMethod: annotation
-      resource.inclusions: |
-        - apiGroups: ["rbac.authorization.k8s.io"]
-          kinds: ["Role","RoleBinding"]
-        - apiGroups: [""]
-          kinds: ["ServiceAccount"]
-      oidc.config: |
-        name: FreeIPA
-        issuer: https://argocd-rbac-server-argocd-rbac.apps.ocp4-upi.skyr.dca.scc/api/dex
-        clientID: argo-cd
-        clientSecret: $oidc.dex.clientSecret
-        requestedScopes: ["openid", "profile", "email", "groups"]
-        rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURERENDQWZTZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREFtTVNRd0lnWURWUVFEREJ0cGJtZHkKWlhOekxXOXdaWEpoZEc5eVFERTNOalU0TVRJMk9ERXdIaGNOTWpVeE1qRTFNVFV6TVRJd1doY05NamN4TWpFMQpNVFV6TVRJeFdqQW1NU1F3SWdZRFZRUUREQnRwYm1keVpYTnpMVzl3WlhKaGRHOXlRREUzTmpVNE1USTJPREV3CmdnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUM1NGJ6RS9STnFIU3k2MmNSQWhwQkQKZGZNSGN6MzBkMmY4ZDBvZDhMVU0wZFNpOGlHMGsyK3U1UFlrWFIxZ093ZGR4Y1pzZWlreTZkMkg1R1F0MCt5WQptK1IySzZHVVFpRUIxYVdIQlZZUlkvQnpzWUZ6ZkEzRFlEZlZYR3ppSmI3NnRlNWo2Y2o5dFc3RXdWTkhScW01Cnc0cWx6VkJ2cGlSZG1MUXhVZVhrMmd1VzYyMnRYcGhJRnozU0VQVnR3N004dzZuSEhpSVVFa2twUjk5a21oRnEKZkNaS1dYNXR1ck5ldjBCQWtvNEpqZlZnQXVGNXlGZnNrTU01V3VGZkdqVW1sMW5FZ3N3SVNZUU52N3RZQWMwZwozVDZ6bkpRaHlJWTlLTjJBTkNuYnp2SGt3UzdoSUJvL0JDZUdvK1dSckYvVXQ0eFV0eHV3WHZYTlBOZENxNnVuN2tOCkFnTUJBQUdqUlRCRE1BNEdBMVVkRHdFQi93UUVBd0lDcERBU0JnTlZIUk1CQWY4RUNEQUdBUUgvQWdFQU1CMEcKQTFVZERnUVdCQlQrMjBCbGZ3MG1NN1ROR3U2Wk9tWVZ5bGZtQVRBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQQpiOWlFZTEvRkF4L0tjOFNTdlM3QXhIcW1JdTllT1BHMkRlR0hCYWNJUm1XdW5Hd2JwN20yMFlCc2J3dXZvb2hRClplYTNVRjlzOFZDenlQbXBxeDYwWU8wVzk4dm5kdUtHeDZnVVNmNmdYODdqRnErL0g1SHZxVEJ6S3hKbTZneWMKQ1U5YlNIMGYwSVFRSlNVb3Q0dFFHbTZPbXFTRFFqUFluUGNwWTV3Rm43TlNWbWNyU3g5VmZnTnN5Z096NmROawpYMm9VcEUycFVxbGVnYnNCTm9QRnlJMXJaSnMxQjNsdDlhbzJZLzdidXhlYXZQa2JKOGRnbE5EVFEzMm5SVVg0CndyVTdleTdlWFNlL21LSU5Wb0k2bGxza0xFaXMzbGJiekF1OXBjZ3RlNW8zanVvRDltcmJCeDlZMHpJamVkcGkKQzkwdmFZNnZTOWdIcDR1S2lKQjFiQT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
 ---
 apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
@@ -64,10 +62,27 @@ metadata:
   name: argocd-dev
   namespace: argocd-dev
 spec:
-  # Namespaces to manage
+  extraConfig:
+    application.resourceTrackingMethod: annotation
+    installationID: argocd-dev
+    oidc.config: |
+      name: FreeIPA
+      issuer: https://argocd-dev-server-argocd-dev.apps.ocp4-upi.skyr.dca.scc/api/dex
+      clientID: argo-cd
+      clientSecret: $oidc.dex.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+      insecureSkipVerify: true
+    resource.inclusions: |
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        kinds: ["Role","RoleBinding"]
+      - apiGroups: [""]
+        kinds: ["ServiceAccount","LimitRange","ResourceQuota","NetworkPolicy"]
   namespaceManagement:
-    - name: testappli
-      allowManagedBy: true
+    - allowManagedBy: true
+      name: testappli
+  server:
+    route:
+      enabled: true
   sso:
     provider: dex
     dex:
@@ -98,27 +113,6 @@ spec:
               - userAttr: dn
                 groupAttr: member
               nameAttr: cn
-  server:
-    route:
-      enabled: true
-  extraConfig:
-    argocd-cm: |
-      installationID: "argocd-dev"
-      application.resourceTrackingMethod: annotation
-      resource.inclusions: |
-        - apiGroups: [""]
-          kinds: ["Secret","ConfigMap","Service","PersistentVolumeClaim"]
-        - apiGroups: ["apps"]
-          kinds: ["Deployment","StatefulSet"]
-        - apiGroups: ["route.openshift.io"]
-          kinds: ["Route"]
-      oidc.config: |
-        name: FreeIPA
-        issuer: https://argocd-dev-server-argocd-dev.apps.ocp4-upi.skyr.dca.scc/api/dex
-        clientID: argo-cd
-        clientSecret: $oidc.dex.clientSecret
-        requestedScopes: ["openid", "profile", "email", "groups"]
-        rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURERENDQWZTZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREFtTVNRd0lnWURWUVFEREJ0cGJtZHkKWlhOekxXOXdaWEpoZEc5eVFERTNOalU0TVRJMk9ERXdIaGNOTWpVeE1qRTFNVFV6TVRJd1doY05NamN4TWpFMQpNVFV6TVRJeFdqQW1NU1F3SWdZRFZRUUREQnRwYm1keVpYTnpMVzl3WlhKaGRHOXlRREUzTmpVNE1USTJPREV3CmdnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUM1NGJ6RS9STnFIU3k2MmNSQWhwQkQKZGZNSGN6MzBkMmY4ZDBvZDhMVU0wZFNpOGlHMGsyK3U1UFlrWFIxZ093ZGR4Y1pzZWlreTZkMkg1R1F0MCt5WQptK1IySzZHVVFpRUIxYVdIQlZZUlkvQnpzWUZ6ZkEzRFlEZlZYR3ppSmI3NnRlNWo2Y2o5dFc3RXdWTkhScW01Cnc0cWx6VkJ2cGlSZG1MUXhVZVhrMmd1VzYyMnRYcGhJRnozU0VQVnR3N004dzZuSEhpSVVFa2twUjk5a21oRnEKZkNaS1dYNXR1ck5ldjBCQWtvNEpqZlZnQXVGNXlGZnNrTU01V3VGZkdqVW1sMW5FZ3N3SVNZUU52N3RZQWMwZwozVDZ6bkpRaHlJWTlLTjJBTkNuYnp2SGt3UzdoSUJvL0JDZUdvK1dSckYvVXQ0eFV0eHV3WHZYTlBOZENxNnVuN2tOCkFnTUJBQUdqUlRCRE1BNEdBMVVkRHdFQi93UUVBd0lDcERBU0JnTlZIUk1CQWY4RUNEQUdBUUgvQWdFQU1CMEcKQTFVZERnUVdCQlQrMjBCbGZ3MG1NN1ROR3U2Wk9tWVZ5bGZtQVRBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQQpiOWlFZTEvRkF4L0tjOFNTdlM3QXhIcW1JdTllT1BHMkRlR0hCYWNJUm1XdW5Hd2JwN20yMFlCc2J3dXZvb2hRClplYTNVRjlzOFZDenlQbXBxeDYwWU8wVzk4dm5kdUtHeDZnVVNmNmdYODdqRnErL0g1SHZxVEJ6S3hKbTZneWMKQ1U5YlNIMGYwSVFRSlNVb3Q0dFFHbTZPbXFTRFFqUFluUGNwWTV3Rm43TlNWbWNyU3g5VmZnTnN5Z096NmROawpYMm9VcEUycFVxbGVnYnNCTm9QRnlJMXJaSnMxQjNsdDlhbzJZLzdidXhlYXZQa2JKOGRnbE5EVFEzMm5SVVg0CndyVTdleTdlWFNlL21LSU5Wb0k2bGxza0xFaXMzbGJiekF1OXBjZ3RlNW8zanVvRDltcmJCeDlZMHpJamVkcGkKQzkwdmFZNnZTOWdIcDR1S2lKQjFiQT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
 ---
 apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
@@ -126,10 +120,25 @@ metadata:
   name: argocd-gov
   namespace: argocd-gov
 spec:
-  # Namespaces to manage
+  extraConfig:
+    application.resourceTrackingMethod: annotation
+    installationID: argocd-gov
+    oidc.config: |
+      name: FreeIPA
+      issuer: https://argocd-gov-server-argocd-gov.apps.ocp4-upi.skyr.dca.scc/api/dex
+      clientID: argo-cd
+      clientSecret: $oidc.dex.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+      insecureSkipVerify: true
+    resource.inclusions: |
+      - apiGroups: [""]
+        kinds: ["ResourceQuota","LimitRange"]
   namespaceManagement:
-    - name: testappli
-      allowManagedBy: true
+    - allowManagedBy: true
+      name: testappli
+  server:
+    route:
+      enabled: true
   sso:
     provider: dex
     dex:
@@ -160,20 +169,3 @@ spec:
               - userAttr: dn
                 groupAttr: member
               nameAttr: cn
-  server:
-    route:
-      enabled: true
-  extraConfig:
-    argocd-cm: |
-      installationID: "argocd-gov"
-      application.resourceTrackingMethod: annotation
-      resource.inclusions: |
-        - apiGroups: [""]
-          kinds: ["ResourceQuota","LimitRange"]
-      oidc.config: |
-        name: FreeIPA
-        issuer: https://argocd-gov-server-argocd-gov.apps.ocp4-upi.skyr.dca.scc/api/dex
-        clientID: argo-cd
-        clientSecret: $oidc.dex.clientSecret
-        requestedScopes: ["openid", "profile", "email", "groups"]
-        rootCAData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURERENDQWZTZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREFtTVNRd0lnWURWUVFEREJ0cGJtZHkKWlhOekxXOXdaWEpoZEc5eVFERTNOalU0TVRJMk9ERXdIaGNOTWpVeE1qRTFNVFV6TVRJd1doY05NamN4TWpFMQpNVFV6TVRJeFdqQW1NU1F3SWdZRFZRUUREQnRwYm1keVpYTnpMVzl3WlhKaGRHOXlRREUzTmpVNE1USTJPREV3CmdnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUM1NGJ6RS9STnFIU3k2MmNSQWhwQkQKZGZNSGN6MzBkMmY4ZDBvZDhMVU0wZFNpOGlHMGsyK3U1UFlrWFIxZ093ZGR4Y1pzZWlreTZkMkg1R1F0MCt5WQptK1IySzZHVVFpRUIxYVdIQlZZUlkvQnpzWUZ6ZkEzRFlEZlZYR3ppSmI3NnRlNWo2Y2o5dFc3RXdWTkhScW01Cnc0cWx6VkJ2cGlSZG1MUXhVZVhrMmd1VzYyMnRYcGhJRnozU0VQVnR3N004dzZuSEhpSVVFa2twUjk5a21oRnEKZkNaS1dYNXR1ck5ldjBCQWtvNEpqZlZnQXVGNXlGZnNrTU01V3VGZkdqVW1sMW5FZ3N3SVNZUU52N3RZQWMwZwozVDZ6bkpRaHlJWTlLTjJBTkNuYnp2SGt3UzdoSUJvL0JDZUdvK1dSckYvVXQ0eFV0eHV3WHZYTlBOZENxNnVuN2tOCkFnTUJBQUdqUlRCRE1BNEdBMVVkRHdFQi93UUVBd0lDcERBY0JnTlZIUk1CQWY4RUNEQUdBUUgvQWdFQU1CMEcKQTFVZERnUVdCQlQrMjBCbGZ3MG1NN1ROR3U2Wk9tWVZ5bGZtQVRBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQQpiOWlFZTEvRkF4L0tjOFNTdlM3QXhIcW1JdTllT1BHMkRlR0hCYWNJUm1XdW5Hd2JwN20yMFlCc2J3dXZvb2hRClplYTNVRjlzOFZDenlQbXBxeDYwWU8wVzk4dm5kdUtHeDZnVVNmNmdYODdqRnErL0g1SHZxVEJ6S3hKbTZneWMKQ1U5YlNIMGYwSVFRSlNVb3Q0dFFHbTZPbXFTRFFqUFluUGNwWTV3Rm43TlNWbWNyU3g5VmZnTnN5Z096NmROawpYMm9VcEUycFVxbGVnYnNCTm9QRnlJMXJaSnMxQjNsdDlhbzJZLzdidXhlYXZQa2JKOGRnbE5EVFEzMm5SVVg0CndyVTdleTdlWFNlL21LSU5Wb0k2bGxza0xFaXMzbGJiekF1OXBjZ3RlNW8zanVvRDltcmJCeDlZMHpJamVkcGkKQzkwdmFZNnZTOWdIcDR1S2lKQjFiQT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
